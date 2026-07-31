@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: estudos-postgres
+    environment:
+      POSTGRES_DB: estudos_platform
+      POSTGRES_USER: estudos
+      POSTGRES_PASSWORD: estudos_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U estudos"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    
+  
+volumes:
+  pgdata:
