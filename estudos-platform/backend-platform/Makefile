@@ -11,11 +11,11 @@ run:            ## roda direto
 
 migrate-up:     ## aplica migrations
 	docker exec -i estudos-postgres psql -U estudos -d estudos_platform \
-	  < internal/infrastructure/persistence/postgres/migration/0001_create_usuarios.up.sql
+	  < internal/infrastructure/persistence/postgres/migration/0001_create_usuario.up.sql
 
 migrate-down:   ## reverte migrations
 	docker exec -i estudos-postgres psql -U estudos -d estudos_platform \
-	  < internal/infrastructure/persistence/postgres/migration/0001_create_usuarios.down.sql
+	  < internal/infrastructure/persistence/postgres/migration/0001_create_usuario.down.sql
 
 test:           ## testes
 	go test -v -race ./internal/...
