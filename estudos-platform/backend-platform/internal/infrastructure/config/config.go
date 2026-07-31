@@ -6,24 +6,23 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
-	"golang.org/x/tools/go/cfg"
 )
 
-//Config centraliza todas as variáveis de ambiente da aplicação.
+// Config centraliza todas as variáveis de ambiente da aplicação.
 type Config struct {
-	AppEnv 				string
-	AppPort 			string
+	AppEnv string
+	AppPort string
 
-	DBHost 				string
-	DBPort 				string
-	DBUser 				string
-	DBPassword 			string
-	DBName 				string
-	DBSSLMode 			string
+	DBHost     string
+	DBPort     string
+	DBUser     string
+	DBPassword string
+	DBName     string
+	DBSSLMode  string
 
-	JWTSecret 			string
-	JWTAcessTTLMin 		int
-	JWTRefreshTTLHours 	int
+	JWTSecret        string
+	JWTAccessTTLMin  int
+	JWTRefreshTTLHours int
 }
 
 func Load() *Config {
@@ -31,23 +30,23 @@ func Load() *Config {
 	_ = godotenv.Load()
 
 	cfg := &Config{
-		AppEnv: 				getEnv("APP_ENV", "development"),
-		AppPort: 				getEnv("APP_PORT", "8080"),
+		AppEnv:  getEnv("APP_ENV", "development"),
+		AppPort: getEnv("APP_PORT", "8080"),
 
-		DBHost: 				getEnv("DB_HOST", "localhost"),
-		DBPort: 				getEnv("DB_PORT", "5432"),
-		DBUser: 				getEnv("DB_USER", "estudos"),
-		DBPassword: 			getEnv("DB_PASSWORD", "estudos_dev"),
-		DBName: 				getEnv("DB_NAME", "estudos_platform"),
-		DBSSLMode: 				getEnv("DB_SSL_MODE", "disable"),
+		DBHost:     getEnv("DB_HOST", "localhost"),
+		DBPort:     getEnv("DB_PORT", "5432"),
+		DBUser:     getEnv("DB_USER", "estudos"),
+		DBPassword: getEnv("DB_PASSWORD", "estudos_dev"),
+		DBName:     getEnv("DB_NAME", "estudos_platform"),
+		DBSSLMode:  getEnv("DB_SSL_MODE", "disable"),
 
-		JWTSecret: 				getEnv("JWT_SECRET", ""),
-		JWTAcessTTLMin: 		getEnv("JWT_ACESS_TTL_MIN", 15),
-		JWTRefreshTTLHours: 	getEnv("JWT_REFRESH_TTL_HOURS", 168),
+		JWTSecret:          getEnv("JWT_SECRET", ""),
+		JWTAccessTTLMin:    getEnvInt("JWT_ACCESS_TTL_MIN", 15),
+		JWTRefreshTTLHours: getEnvInt("JWT_REFRESH_TTL_HOURS", 168),
 	}
 
 	if cfg.JWTSecret == "" {
-		log.Fatal("JWT_SECRET é obrigatório.")
+		log.Fatal("JWT_SECRET é obrigatório")
 	}
 	return cfg
 }
