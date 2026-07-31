@@ -1,0 +1,55 @@
+# ============ Go ============
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.out
+cover.html
+
+# Air (hot reload) artifacts
+tmp/
+
+# ============ Node / Frontend ============
+node_modules/
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+.vercel
+
+# ============ Ambiente ============
+.env
+.env.*
+!.env.example
+
+# ============ Banco / Docker ============
+*.sqlite
+*.db
+pgdata/
+postgres-data/
+
+# ============ IDE / Editores ============
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ============ Logs ============
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ============ Auth / Secrets ============
+*.pem
+*.key
+*.crt
+secrets/
