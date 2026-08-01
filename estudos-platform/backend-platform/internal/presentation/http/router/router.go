@@ -43,9 +43,10 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	})
 	loginUC := usecase.NewLoginUsuario(usuarioRepo, refreshRepo, hasher, tokens, tokenCfg)
 	refreshUC := usecase.NewRefreshTokenUC(refreshRepo, usuarioRepo, tokens, tokenCfg)
+	perfilUC := usecase.NewObterPerfil(usuarioRepo)
 
 	// ---- handler (apresentação) ----
-	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC)
+	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC)
 
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Post("/auth/registrar", auth.Registrar)

@@ -26,19 +26,25 @@ type RefreshUseCase interface {
 	Execute(ctx context.Context, refreshToken string) (*dto.AuthResponse, error)
 }
 
+type ObterPerfilUseCase interface {
+	Execute(ctx context.Context, usuarioID string) (*dto.UsuarioResponse, error)
+}
+
 // AuthHandler é LEVE: só faz binding, validação de borda e delega para o use case.
 type AuthHandler struct {
 	registrar RegistrarUseCase
 	login     LoginUseCase
 	refresh   RefreshUseCase
+	perfil    ObterPerfilUseCase
 	validate  *validator.Validate
 }
 
-func NewAuthHandler(registrar RegistrarUseCase, login LoginUseCase, refresh RefreshUseCase) *AuthHandler {
+func NewAuthHandler(registrar RegistrarUseCase, login LoginUseCase, refresh RefreshUseCase, perfil ObterPerfilUseCase) *AuthHandler {
 	return &AuthHandler{
 		registrar: registrar,
 		login:     login,
 		refresh:   refresh,
+		perfil:    perfil,
 		validate:  validator.New(),
 	}
 }
@@ -82,13 +88,16 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	h.escreverJSON(w, http.StatusOK, resp)
 }
 
-// Me retorna o perfil do usuário logado (dados vêm do token validado no middleware).
+// Me retorna o perfil completo do usuário logado (ID vem do token validado no
+// middleware; nome/email são buscados no banco pelo use case).
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	usuarioID, _ := r.Context().Value(middleware.CtxUsuarioID).(string)
-	email, _ := r.Context().Value(middleware.CtxEmail).(string)
-
-	payload := dto.UsuarioResponse{ID: usuarioID, Email: email}
-	h.escreverJSON(w, http.StatusOK, payload)
+	resp, err := h.perfil.Execute(r.Context(), usuarioID)
+	if err != nil {
+		h.escreverErro(w, err)
+		return
+	}
+	h.escreverJSON(w, http.StatusOK, resp)
 }
 
 // ---- helpers ----
