@@ -17,10 +17,10 @@ type RefreshTokenUC struct {
 	refresh repository.RefreshTokenRepository
 	repo    repository.UsuarioRepository
 	tokens  port.TokenGerador
-	cfg     LoginConfig
+	cfg     TokenConfig
 }
 
-func NewRefreshTokenUC(refresh repository.RefreshTokenRepository, repo repository.UsuarioRepository, tokens port.TokenGerador, cfg LoginConfig) *RefreshTokenUC {
+func NewRefreshTokenUC(refresh repository.RefreshTokenRepository, repo repository.UsuarioRepository, tokens port.TokenGerador, cfg TokenConfig) *RefreshTokenUC {
 	return &RefreshTokenUC{refresh: refresh, repo: repo, tokens: tokens, cfg: cfg}
 }
 
@@ -28,7 +28,7 @@ func (uc *RefreshTokenUC) Execute(ctx context.Context, refreshToken string) (*dt
 	// 1. localiza pelo hash (nunca guardamos o token em texto puro)
 	hash := sha256.Sum256([]byte(refreshToken))
 	rt, err := uc.refresh.FindByHash(ctx, hex.EncodeToString(hash[:]))
-	if err != nil {
+	if err != nil || rt == nil {
 		return nil, errors.ErrUnauthorized("refresh token inválido", "RefreshTokenUC.Execute", nil)
 	}
 

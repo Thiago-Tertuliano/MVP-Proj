@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	stderrors "errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,7 +15,7 @@ import (
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/shared/errors"
 )
 
-type LoginConfig struct {
+type TokenConfig struct {
 	AccessTTLMin  int
 	RefreshTTLHor int
 }
@@ -24,10 +25,10 @@ type LoginUsuario struct {
 	refresh repository.RefreshTokenRepository
 	hasher  port.SenhaHasher
 	tokens  port.TokenGerador
-	cfg     LoginConfig
+	cfg     TokenConfig
 }
 
-func NewLoginUsuario(repo repository.UsuarioRepository, refresh repository.RefreshTokenRepository, hasher port.SenhaHasher, tokens port.TokenGerador, cfg LoginConfig) *LoginUsuario {
+func NewLoginUsuario(repo repository.UsuarioRepository, refresh repository.RefreshTokenRepository, hasher port.SenhaHasher, tokens port.TokenGerador, cfg TokenConfig) *LoginUsuario {
 	return &LoginUsuario{repo: repo, hasher: hasher, tokens: tokens, refresh: refresh, cfg: cfg}
 }
 
@@ -38,10 +39,15 @@ func (uc *LoginUsuario) Execute(ctx context.Context, req dto.LoginRequest) (*dto
 	}
 
 	// 1. busca usuário — se não existe, mesma mensagem de "credenciais inválidas"
-	//    para não vazar quais e-mails estão cadastrados (anti enumeração)
+	//    para não vazar quais e-mails estão cadastrados (anti enumeração).
+	//    Só NotFound vira 401; falha de infraestrutura vira erro interno.
 	usuario, err := uc.repo.FindByEmail(ctx, email)
 	if err != nil {
-		return nil, errors.ErrUnauthorized("credenciais inválidas", "LoginUsuario.Execute", nil)
+		var de *errors.DomainError
+		if stderrors.As(err, &de) && de.Kind == errors.NotFound {
+			return nil, errors.ErrUnauthorized("credenciais inválidas", "LoginUsuario.Execute", nil)
+		}
+		return nil, errors.ErrInternal("falha ao buscar usuário", "LoginUsuario.Execute", err)
 	}
 
 	if !usuario.EstaAtiva() {

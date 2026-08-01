@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	stderrors "errors"
 	"time"
 
 	"github.com/thiago-tertuliano/estudos-platform/internal/applications/estudos/dto"
@@ -57,8 +58,13 @@ func (uc *RegistrarUsuario) Execute(ctx context.Context, req dto.RegistrarReques
 		return nil, err
 	}
 
-	// 5. persiste via porta do domínio
+	// 5. persiste via porta do domínio. Erro de domínio já mapeado (ex.: e-mail
+	//    duplicado por corrida) passa direto; demais viram erro interno.
 	if err := uc.repo.Save(ctx, usuario); err != nil {
+		var de *errors.DomainError
+		if stderrors.As(err, &de) {
+			return nil, err
+		}
 		return nil, errors.ErrInternal("falha ao salvar usuário", "RegistrarUsuario.Execute", err)
 	}
 
