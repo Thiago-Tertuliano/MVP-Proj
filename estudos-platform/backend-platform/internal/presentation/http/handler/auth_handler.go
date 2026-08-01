@@ -1,26 +1,40 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/thiago-tertuliano/estudos-platform/internal/applications/estudos/dto"
-	"github.com/thiago-tertuliano/estudos-platform/internal/applications/estudos/usecase"
 	domainErros "github.com/thiago-tertuliano/estudos-platform/internal/domain/shared/errors"
 	"github.com/thiago-tertuliano/estudos-platform/internal/presentation/http/middleware"
 )
 
+// Interfaces locais: dependemos de contratos, não de implementações concretas.
+// As structs de use case satisfazem essas interfaces sem nenhuma mudança nelas.
+type RegistrarUseCase interface {
+	Execute(ctx context.Context, req dto.RegistrarRequest) (*dto.AuthResponse, error)
+}
+
+type LoginUseCase interface {
+	Execute(ctx context.Context, req dto.LoginRequest) (*dto.AuthResponse, error)
+}
+
+type RefreshUseCase interface {
+	Execute(ctx context.Context, refreshToken string) (*dto.AuthResponse, error)
+}
+
 // AuthHandler é LEVE: só faz binding, validação de borda e delega para o use case.
 type AuthHandler struct {
-	registrar *usecase.RegistrarUsuario
-	login     *usecase.LoginUsuario
-	refresh   *usecase.RefreshTokenUC
+	registrar RegistrarUseCase
+	login     LoginUseCase
+	refresh   RefreshUseCase
 	validate  *validator.Validate
 }
 
-func NewAuthHandler(registrar *usecase.RegistrarUsuario, login *usecase.LoginUsuario, refresh *usecase.RefreshTokenUC) *AuthHandler {
+func NewAuthHandler(registrar RegistrarUseCase, login LoginUseCase, refresh RefreshUseCase) *AuthHandler {
 	return &AuthHandler{
 		registrar: registrar,
 		login:     login,
@@ -113,8 +127,10 @@ func (h *AuthHandler) escreverErro(w http.ResponseWriter, err error) {
 		status = http.StatusNotFound
 	case domainErros.AlreadyExists:
 		status = http.StatusConflict
-	case domainErros.Unauthorized, domainErros.Forbidden:
+	case domainErros.Unauthorized:
 		status = http.StatusUnauthorized
+	case domainErros.Forbidden:
+		status = http.StatusForbidden
 	case domainErros.InvalidState:
 		status = http.StatusConflict
 	}

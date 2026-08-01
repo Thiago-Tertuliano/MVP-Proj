@@ -11,7 +11,7 @@ func Recovery(next http.Handler) http.Handler {
 		defer func() {
 			if rec := recover(); rec != nil {
 				slog.Error("panic recuperado", "erro", rec)
-				http.Error(w, "erro interno do servidor", http.StatusInternalServerError)
+				escreverErroJSON(w, http.StatusInternalServerError, "erro interno do servidor")
 			}
 		}()
 		next.ServeHTTP(w, r)

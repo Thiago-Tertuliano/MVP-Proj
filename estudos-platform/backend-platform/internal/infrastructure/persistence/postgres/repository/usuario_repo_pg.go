@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/estudos/entity"
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/estudos/valueobject"
@@ -32,7 +33,14 @@ func (r *UsuarioRepoPG) Save(ctx context.Context, u *entity.Usuario) error {
 			status = EXCLUDED.status,
 			updated_at = EXCLUDED.updated_at
 	`, u.ID(), u.Nome(), u.Email().Value(), u.SenhaHash().Value(), u.Status(), u.CreatedAt(), u.UpdatedAt())
-	return err
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return domainErros.ErrAlreadyExists("e-mail já cadastrado", "usuario_repo_pg.Save", nil)
+		}
+		return err
+	}
+	return nil
 }
 
 func (r *UsuarioRepoPG) FindByEmail(ctx context.Context, email valueobject.Email) (*entity.Usuario, error) {

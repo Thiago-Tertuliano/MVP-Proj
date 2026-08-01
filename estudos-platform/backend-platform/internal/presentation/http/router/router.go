@@ -34,7 +34,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	tokens := external.NewJWTService(cfg.JWTSecret)
 
 	// ---- use cases (aplicação) ----
-	tokenCfg := usecase.LoginConfig{
+	tokenCfg := usecase.TokenConfig{
 		AccessTTLMin:  cfg.JWTAccessTTLMin,
 		RefreshTTLHor: cfg.JWTRefreshTTLHours,
 	}
