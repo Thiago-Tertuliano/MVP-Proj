@@ -28,6 +28,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	// ---- repositórios (infra) ----
 	usuarioRepo := pgrepo.NewUsuarioRepoPG(pool)
 	refreshRepo := pgrepo.NewRefreshTokenRepoPG(pool)
+	artigoRepo := pgrepo.NewArtigoRepoPG(pool)
 
 	// ---- ports concretos (infra) ----
 	hasher := external.NewBcryptHasher(10)
@@ -45,18 +46,30 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	refreshUC := usecase.NewRefreshTokenUC(refreshRepo, usuarioRepo, tokens, tokenCfg)
 	perfilUC := usecase.NewObterPerfil(usuarioRepo)
 
-	// ---- handler (apresentação) ----
+	criarArtigoUC := usecase.NewCriarArtigo(artigoRepo)
+	obterArtigoUC := usecase.NewObterArtigo(artigoRepo)
+	listarArtigosUC := usecase.NewListarArtigos(artigoRepo)
+	atualizarArtigoUC := usecase.NewAtualizarArtigo(artigoRepo)
+	publicarArtigoUC := usecase.NewPublicarArtigo(artigoRepo)
+
+	// ---- handlers (apresentação) ----
 	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC)
+	artigos := handler.NewArtigoHandler(criarArtigoUC, obterArtigoUC, listarArtigosUC, atualizarArtigoUC, publicarArtigoUC)
 
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Post("/auth/registrar", auth.Registrar)
 		api.Post("/auth/login", auth.Login)
 		api.Post("/auth/refresh", auth.Refresh)
 
-		// grupo protegido por JWT
+		api.Get("/artigos", artigos.Listar)
+		api.Get("/artigos/{slug}", artigos.Obter)
+
 		api.Group(func(pr chi.Router) {
 			pr.Use(middleware.NewAutenticador(tokens).Proteger)
 			pr.Get("/auth/me", auth.Me)
+			pr.Post("/artigos", artigos.Criar)
+			pr.Put("/artigos/{id}", artigos.Atualizar)
+			pr.Post("/artigos/{id}/publicar", artigos.Publicar)
 		})
 	})
 
