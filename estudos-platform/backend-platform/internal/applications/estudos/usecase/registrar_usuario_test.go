@@ -8,12 +8,13 @@ import (
 	"github.com/thiago-tertuliano/estudos-platform/internal/applications/estudos/dto"
 	"github.com/thiago-tertuliano/estudos-platform/internal/applications/estudos/port"
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/estudos/entity"
+	"github.com/thiago-tertuliano/estudos-platform/internal/domain/estudos/repository"
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/estudos/valueobject"
 	domainErros "github.com/thiago-tertuliano/estudos-platform/internal/domain/shared/errors"
 )
 
-func novoRegistrar(repo *MockUsuarioRepository, hasher *MockSenhaHasher, tokens *MockTokenGerador) *RegistrarUsuario {
-	return NewRegistrarUsuario(repo, hasher, tokens, RegistrarConfig{AccessTTLMin: 15, RefreshTTLHor: 168})
+func novoRegistrar(repo *MockUsuarioRepository, refresh *MockRefreshTokenRepository, hasher *MockSenhaHasher, tokens *MockTokenGerador) *RegistrarUsuario {
+	return NewRegistrarUsuario(repo, refresh, hasher, tokens, RegistrarConfig{AccessTTLMin: 15, RefreshTTLHor: 168})
 }
 
 func tokenParFake() *port.TokenPar {
@@ -25,9 +26,16 @@ func tokenParFake() *port.TokenPar {
 
 func TestRegistrar_Sucesso(t *testing.T) {
 	ctx := context.Background()
+	var savedRT *repository.RefreshToken
 	repo := &MockUsuarioRepository{
 		EmailExisteFn: func(ctx context.Context, email valueobject.Email) (bool, error) { return false, nil },
 		SaveFn:        func(ctx context.Context, u *entity.Usuario) error { return nil },
+	}
+	refresh := &MockRefreshTokenRepository{
+		SaveFn: func(ctx context.Context, rt *repository.RefreshToken) error {
+			savedRT = rt
+			return nil
+		},
 	}
 	hasher := &MockSenhaHasher{
 		HashFn: func(plain string) (string, error) { return "$2a$10$hash", nil },
@@ -36,7 +44,7 @@ func TestRegistrar_Sucesso(t *testing.T) {
 		GerarFn: func(c port.Claims, a, r time.Duration) (*port.TokenPar, error) { return tokenParFake(), nil },
 	}
 
-	uc := novoRegistrar(repo, hasher, tokens)
+	uc := novoRegistrar(repo, refresh, hasher, tokens)
 	resp, err := uc.Execute(ctx, dto.RegistrarRequest{Nome: "Thiago", Email: "t@ex.com", Senha: "senha123"})
 	if err != nil {
 		t.Fatalf("não deveria retornar erro: %v", err)
@@ -47,6 +55,37 @@ func TestRegistrar_Sucesso(t *testing.T) {
 	if resp.Usuario.Email != "t@ex.com" {
 		t.Errorf("email incorreto: %s", resp.Usuario.Email)
 	}
+	if savedRT == nil || savedRT.TokenHash == "" {
+		t.Fatal("refresh token deveria ter sido persistido")
+	}
+	if savedRT.UsuarioID == "" {
+		t.Error("refresh token sem usuario_id")
+	}
+}
+
+func TestRegistrar_FalhaAoSalvarRefresh(t *testing.T) {
+	ctx := context.Background()
+	repo := &MockUsuarioRepository{
+		EmailExisteFn: func(ctx context.Context, email valueobject.Email) (bool, error) { return false, nil },
+		SaveFn:        func(ctx context.Context, u *entity.Usuario) error { return nil },
+	}
+	refresh := &MockRefreshTokenRepository{
+		SaveFn: func(ctx context.Context, rt *repository.RefreshToken) error {
+			return context.Canceled
+		},
+	}
+	hasher := &MockSenhaHasher{
+		HashFn: func(plain string) (string, error) { return "$2a$10$hash", nil },
+	}
+	tokens := &MockTokenGerador{
+		GerarFn: func(c port.Claims, a, r time.Duration) (*port.TokenPar, error) { return tokenParFake(), nil },
+	}
+
+	uc := novoRegistrar(repo, refresh, hasher, tokens)
+	_, err := uc.Execute(ctx, dto.RegistrarRequest{Nome: "Thiago", Email: "t@ex.com", Senha: "senha123"})
+	if de, ok := err.(*domainErros.DomainError); !ok || de.Kind != domainErros.Internal {
+		t.Errorf("esperava Internal, got %#v", err)
+	}
 }
 
 func TestRegistrar_EmailJaCadastrado(t *testing.T) {
@@ -54,10 +93,7 @@ func TestRegistrar_EmailJaCadastrado(t *testing.T) {
 	repo := &MockUsuarioRepository{
 		EmailExisteFn: func(ctx context.Context, email valueobject.Email) (bool, error) { return true, nil },
 	}
-	hasher := &MockSenhaHasher{HashFn: func(plain string) (string, error) { return "h", nil }}
-	tokens := &MockTokenGerador{}
-
-	uc := novoRegistrar(repo, hasher, tokens)
+	uc := novoRegistrar(repo, &MockRefreshTokenRepository{}, &MockSenhaHasher{HashFn: func(plain string) (string, error) { return "h", nil }}, &MockTokenGerador{})
 	_, err := uc.Execute(ctx, dto.RegistrarRequest{Nome: "Thiago", Email: "t@ex.com", Senha: "senha123"})
 	if de, ok := err.(*domainErros.DomainError); !ok || de.Kind != domainErros.AlreadyExists {
 		t.Errorf("esperava AlreadyExists, got %#v", err)
@@ -65,11 +101,7 @@ func TestRegistrar_EmailJaCadastrado(t *testing.T) {
 }
 
 func TestRegistrar_EmailInvalido(t *testing.T) {
-	repo := &MockUsuarioRepository{}
-	hasher := &MockSenhaHasher{}
-	tokens := &MockTokenGerador{}
-	uc := novoRegistrar(repo, hasher, tokens)
-
+	uc := novoRegistrar(&MockUsuarioRepository{}, &MockRefreshTokenRepository{}, &MockSenhaHasher{}, &MockTokenGerador{})
 	_, err := uc.Execute(context.Background(), dto.RegistrarRequest{Nome: "Thiago", Email: "invalido", Senha: "senha123"})
 	if de, ok := err.(*domainErros.DomainError); !ok || de.Kind != domainErros.InvalidArgument {
 		t.Errorf("esperava InvalidArgument, got %#v", err)
@@ -83,7 +115,7 @@ func TestRegistrar_ErroNoRepo(t *testing.T) {
 			return false, context.Canceled
 		},
 	}
-	uc := novoRegistrar(repo, &MockSenhaHasher{}, &MockTokenGerador{})
+	uc := novoRegistrar(repo, &MockRefreshTokenRepository{}, &MockSenhaHasher{}, &MockTokenGerador{})
 	_, err := uc.Execute(ctx, dto.RegistrarRequest{Nome: "Thiago", Email: "t@ex.com", Senha: "senha123"})
 	if de, ok := err.(*domainErros.DomainError); !ok || de.Kind != domainErros.Internal {
 		t.Errorf("esperava Internal, got %#v", err)
