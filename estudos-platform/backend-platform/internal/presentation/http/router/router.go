@@ -44,9 +44,10 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	loginUC := usecase.NewLoginUsuario(usuarioRepo, refreshRepo, hasher, tokens, tokenCfg)
 	refreshUC := usecase.NewRefreshTokenUC(refreshRepo, usuarioRepo, tokens, tokenCfg)
 	perfilUC := usecase.NewObterPerfil(usuarioRepo)
+	logoutUC := usecase.NewLogoutUsuario(refreshRepo)
 
 	// ---- handler (apresentação) ----
-	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC)
+	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC, logoutUC)
 
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Post("/auth/registrar", auth.Registrar)
@@ -57,6 +58,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 		api.Group(func(pr chi.Router) {
 			pr.Use(middleware.NewAutenticador(tokens).Proteger)
 			pr.Get("/auth/me", auth.Me)
+			pr.Post("/auth/logout", auth.Logout)
 		})
 	})
 

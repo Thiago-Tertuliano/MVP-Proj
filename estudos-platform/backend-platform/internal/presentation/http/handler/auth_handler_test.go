@@ -51,6 +51,39 @@ func (f *fakePerfil) Execute(ctx context.Context, usuarioID string) (*dto.Usuari
 	return f.resp, f.err
 }
 
+type fakeLogout struct {
+	err error
+}
+
+func (f *fakeLogout) Execute(ctx context.Context, usuarioID string) error {
+	return f.err
+}
+
+func newAuthHandler(
+	reg RegistrarUseCase,
+	login LoginUseCase,
+	refresh RefreshUseCase,
+	perfil ObterPerfilUseCase,
+	logout LogoutUseCase,
+) *AuthHandler {
+	if reg == nil {
+		reg = &fakeRegistrar{}
+	}
+	if login == nil {
+		login = &fakeLogin{}
+	}
+	if refresh == nil {
+		refresh = &fakeRefresh{}
+	}
+	if perfil == nil {
+		perfil = &fakePerfil{}
+	}
+	if logout == nil {
+		logout = &fakeLogout{}
+	}
+	return NewAuthHandler(reg, login, refresh, perfil, logout)
+}
+
 func authResponseFake() *dto.AuthResponse {
 	return &dto.AuthResponse{
 		Tokens:  dto.TokenResponse{AccessToken: "access", RefreshToken: "refresh", ExpiracaoEm: 123},
@@ -72,7 +105,7 @@ func executarHandler(fn http.HandlerFunc, method, target, corpo string, ctx cont
 // ---- testes ----
 
 func TestRegistrar_Sucesso(t *testing.T) {
-	h := NewAuthHandler(&fakeRegistrar{resp: authResponseFake()}, &fakeLogin{}, &fakeRefresh{}, &fakePerfil{})
+	h := newAuthHandler(&fakeRegistrar{resp: authResponseFake()}, nil, nil, nil, nil)
 	w := executarHandler(h.Registrar, http.MethodPost, "/auth/registrar", `{"nome":"Thiago","email":"t@ex.com","senha":"senha123"}`, nil)
 	if w.Code != http.StatusCreated {
 		t.Fatalf("esperava 201, got %d", w.Code)
@@ -80,7 +113,7 @@ func TestRegistrar_Sucesso(t *testing.T) {
 }
 
 func TestRegistrar_CorpoInvalido(t *testing.T) {
-	h := NewAuthHandler(&fakeRegistrar{}, &fakeLogin{}, &fakeRefresh{}, &fakePerfil{})
+	h := newAuthHandler(nil, nil, nil, nil, nil)
 	w := executarHandler(h.Registrar, http.MethodPost, "/auth/registrar", `{nao-json`, nil)
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("esperava 400, got %d", w.Code)
@@ -88,7 +121,7 @@ func TestRegistrar_CorpoInvalido(t *testing.T) {
 }
 
 func TestRegistrar_Validacao(t *testing.T) {
-	h := NewAuthHandler(&fakeRegistrar{}, &fakeLogin{}, &fakeRefresh{}, &fakePerfil{})
+	h := newAuthHandler(nil, nil, nil, nil, nil)
 	w := executarHandler(h.Registrar, http.MethodPost, "/auth/registrar", `{"nome":"T","email":"x","senha":"1"}`, nil)
 	if w.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("esperava 422, got %d", w.Code)
@@ -97,7 +130,7 @@ func TestRegistrar_Validacao(t *testing.T) {
 
 func TestRegistrar_EmailJaCadastrado(t *testing.T) {
 	erro := domainErros.ErrAlreadyExists("e-mail já cadastrado", "test", nil)
-	h := NewAuthHandler(&fakeRegistrar{err: erro}, &fakeLogin{}, &fakeRefresh{}, &fakePerfil{})
+	h := newAuthHandler(&fakeRegistrar{err: erro}, nil, nil, nil, nil)
 	w := executarHandler(h.Registrar, http.MethodPost, "/auth/registrar", `{"nome":"Thiago","email":"t@ex.com","senha":"senha123"}`, nil)
 	if w.Code != http.StatusConflict {
 		t.Fatalf("esperava 409, got %d", w.Code)
@@ -105,7 +138,7 @@ func TestRegistrar_EmailJaCadastrado(t *testing.T) {
 }
 
 func TestLogin_Sucesso(t *testing.T) {
-	h := NewAuthHandler(&fakeRegistrar{}, &fakeLogin{resp: authResponseFake()}, &fakeRefresh{}, &fakePerfil{})
+	h := newAuthHandler(nil, &fakeLogin{resp: authResponseFake()}, nil, nil, nil)
 	w := executarHandler(h.Login, http.MethodPost, "/auth/login", `{"email":"t@ex.com","senha":"senha123"}`, nil)
 	if w.Code != http.StatusOK {
 		t.Fatalf("esperava 200, got %d", w.Code)
@@ -121,7 +154,7 @@ func TestLogin_Sucesso(t *testing.T) {
 
 func TestLogin_CredenciaisInvalidas(t *testing.T) {
 	erro := domainErros.ErrUnauthorized("credenciais inválidas", "test", nil)
-	h := NewAuthHandler(&fakeRegistrar{}, &fakeLogin{err: erro}, &fakeRefresh{}, &fakePerfil{})
+	h := newAuthHandler(nil, &fakeLogin{err: erro}, nil, nil, nil)
 	w := executarHandler(h.Login, http.MethodPost, "/auth/login", `{"email":"t@ex.com","senha":"errada"}`, nil)
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("esperava 401, got %d", w.Code)
@@ -129,7 +162,7 @@ func TestLogin_CredenciaisInvalidas(t *testing.T) {
 }
 
 func TestRefresh_Sucesso(t *testing.T) {
-	h := NewAuthHandler(&fakeRegistrar{}, &fakeLogin{}, &fakeRefresh{resp: authResponseFake()}, &fakePerfil{})
+	h := newAuthHandler(nil, nil, &fakeRefresh{resp: authResponseFake()}, nil, nil)
 	w := executarHandler(h.Refresh, http.MethodPost, "/auth/refresh", `{"refresh_token":"token"}`, nil)
 	if w.Code != http.StatusOK {
 		t.Fatalf("esperava 200, got %d", w.Code)
@@ -138,7 +171,7 @@ func TestRefresh_Sucesso(t *testing.T) {
 
 func TestRefresh_TokenInvalido(t *testing.T) {
 	erro := domainErros.ErrUnauthorized("refresh token inválido", "test", nil)
-	h := NewAuthHandler(&fakeRegistrar{}, &fakeLogin{}, &fakeRefresh{err: erro}, &fakePerfil{})
+	h := newAuthHandler(nil, nil, &fakeRefresh{err: erro}, nil, nil)
 	w := executarHandler(h.Refresh, http.MethodPost, "/auth/refresh", `{"refresh_token":"token"}`, nil)
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("esperava 401, got %d", w.Code)
@@ -147,7 +180,7 @@ func TestRefresh_TokenInvalido(t *testing.T) {
 
 func TestMe(t *testing.T) {
 	perfil := &fakePerfil{resp: &dto.UsuarioResponse{ID: "u-1", Nome: "Thiago", Email: "t@ex.com"}}
-	h := NewAuthHandler(&fakeRegistrar{}, &fakeLogin{}, &fakeRefresh{}, perfil)
+	h := newAuthHandler(nil, nil, nil, perfil, nil)
 	ctx := context.WithValue(context.Background(), middleware.CtxUsuarioID, "u-1")
 	w := executarHandler(h.Me, http.MethodGet, "/auth/me", "", ctx)
 	if w.Code != http.StatusOK {
@@ -164,10 +197,29 @@ func TestMe(t *testing.T) {
 
 func TestMe_Erro(t *testing.T) {
 	erro := domainErros.ErrNotFound("usuário não encontrado", "test", nil)
-	h := NewAuthHandler(&fakeRegistrar{}, &fakeLogin{}, &fakeRefresh{}, &fakePerfil{err: erro})
+	h := newAuthHandler(nil, nil, nil, &fakePerfil{err: erro}, nil)
 	ctx := context.WithValue(context.Background(), middleware.CtxUsuarioID, "u-inexistente")
 	w := executarHandler(h.Me, http.MethodGet, "/auth/me", "", ctx)
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("esperava 404, got %d", w.Code)
+	}
+}
+
+func TestLogout_Sucesso(t *testing.T) {
+	h := newAuthHandler(nil, nil, nil, nil, &fakeLogout{})
+	ctx := context.WithValue(context.Background(), middleware.CtxUsuarioID, "u-1")
+	w := executarHandler(h.Logout, http.MethodPost, "/auth/logout", "", ctx)
+	if w.Code != http.StatusOK {
+		t.Fatalf("esperava 200, got %d", w.Code)
+	}
+}
+
+func TestLogout_Erro(t *testing.T) {
+	erro := domainErros.ErrInternal("falha ao revogar", "test", nil)
+	h := newAuthHandler(nil, nil, nil, nil, &fakeLogout{err: erro})
+	ctx := context.WithValue(context.Background(), middleware.CtxUsuarioID, "u-1")
+	w := executarHandler(h.Logout, http.MethodPost, "/auth/logout", "", ctx)
+	if w.Code != http.StatusInternalServerError {
+		t.Fatalf("esperava 500, got %d", w.Code)
 	}
 }

@@ -30,21 +30,33 @@ type ObterPerfilUseCase interface {
 	Execute(ctx context.Context, usuarioID string) (*dto.UsuarioResponse, error)
 }
 
+type LogoutUseCase interface {
+	Execute(ctx context.Context, usuarioID string) error
+}
+
 // AuthHandler é LEVE: só faz binding, validação de borda e delega para o use case.
 type AuthHandler struct {
 	registrar RegistrarUseCase
 	login     LoginUseCase
 	refresh   RefreshUseCase
 	perfil    ObterPerfilUseCase
+	logout    LogoutUseCase
 	validate  *validator.Validate
 }
 
-func NewAuthHandler(registrar RegistrarUseCase, login LoginUseCase, refresh RefreshUseCase, perfil ObterPerfilUseCase) *AuthHandler {
+func NewAuthHandler(
+	registrar RegistrarUseCase,
+	login LoginUseCase,
+	refresh RefreshUseCase,
+	perfil ObterPerfilUseCase,
+	logout LogoutUseCase,
+) *AuthHandler {
 	return &AuthHandler{
 		registrar: registrar,
 		login:     login,
 		refresh:   refresh,
 		perfil:    perfil,
+		logout:    logout,
 		validate:  validator.New(),
 	}
 }
@@ -98,6 +110,16 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.escreverJSON(w, http.StatusOK, resp)
+}
+
+// Logout revoga todos os refresh tokens do usuário autenticado.
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	usuarioID, _ := r.Context().Value(middleware.CtxUsuarioID).(string)
+	if err := h.logout.Execute(r.Context(), usuarioID); err != nil {
+		h.escreverErro(w, err)
+		return
+	}
+	h.escreverJSON(w, http.StatusOK, map[string]string{"mensagem": "logout efetuado"})
 }
 
 // ---- helpers ----
