@@ -2,9 +2,12 @@ package usecase
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	stderrors "errors"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/thiago-tertuliano/estudos-platform/internal/applications/estudos/dto"
 	"github.com/thiago-tertuliano/estudos-platform/internal/applications/estudos/port"
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/estudos/entity"
@@ -20,14 +23,21 @@ type RegistrarConfig struct {
 }
 
 type RegistrarUsuario struct {
-	repo   repository.UsuarioRepository
-	hasher port.SenhaHasher
-	tokens port.TokenGerador
-	cfg    RegistrarConfig
+	repo    repository.UsuarioRepository
+	refresh repository.RefreshTokenRepository
+	hasher  port.SenhaHasher
+	tokens  port.TokenGerador
+	cfg     RegistrarConfig
 }
 
-func NewRegistrarUsuario(repo repository.UsuarioRepository, hasher port.SenhaHasher, tokens port.TokenGerador, cfg RegistrarConfig) *RegistrarUsuario {
-	return &RegistrarUsuario{repo: repo, hasher: hasher, tokens: tokens, cfg: cfg}
+func NewRegistrarUsuario(
+	repo repository.UsuarioRepository,
+	refresh repository.RefreshTokenRepository,
+	hasher port.SenhaHasher,
+	tokens port.TokenGerador,
+	cfg RegistrarConfig,
+) *RegistrarUsuario {
+	return &RegistrarUsuario{repo: repo, refresh: refresh, hasher: hasher, tokens: tokens, cfg: cfg}
 }
 
 func (uc *RegistrarUsuario) Execute(ctx context.Context, req dto.RegistrarRequest) (*dto.AuthResponse, error) {
@@ -68,7 +78,7 @@ func (uc *RegistrarUsuario) Execute(ctx context.Context, req dto.RegistrarReques
 		return nil, errors.ErrInternal("falha ao salvar usuário", "RegistrarUsuario.Execute", err)
 	}
 
-	// 6. gera tokens e responde
+	// 6. gera tokens e persiste o refresh (hash) — paridade com login
 	tokens, err := uc.tokens.Gerar(
 		port.Claims{UsuarioID: usuario.ID().String(), Email: email.Value()},
 		time.Duration(uc.cfg.AccessTTLMin)*time.Minute,
@@ -76,6 +86,19 @@ func (uc *RegistrarUsuario) Execute(ctx context.Context, req dto.RegistrarReques
 	)
 	if err != nil {
 		return nil, errors.ErrInternal("falha ao gerar tokens", "RegistrarUsuario.Execute", err)
+	}
+
+	tokenHash := sha256.Sum256([]byte(tokens.RefreshToken))
+	rt := &repository.RefreshToken{
+		ID:        uuid.New().String(),
+		UsuarioID: usuario.ID().String(),
+		TokenHash: hex.EncodeToString(tokenHash[:]),
+		ExpiraEm:  tokens.RefreshExp,
+		Revogado:  false,
+		CriadoEm:  time.Now().UTC(),
+	}
+	if err := uc.refresh.Save(ctx, rt); err != nil {
+		return nil, errors.ErrInternal("falha ao salvar refresh token", "RegistrarUsuario.Execute", err)
 	}
 
 	return &dto.AuthResponse{

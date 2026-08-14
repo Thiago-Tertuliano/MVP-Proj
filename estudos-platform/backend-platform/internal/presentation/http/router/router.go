@@ -39,7 +39,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 		AccessTTLMin:  cfg.JWTAccessTTLMin,
 		RefreshTTLHor: cfg.JWTRefreshTTLHours,
 	}
-	registrarUC := usecase.NewRegistrarUsuario(usuarioRepo, hasher, tokens, usecase.RegistrarConfig{
+	registrarUC := usecase.NewRegistrarUsuario(usuarioRepo, refreshRepo, hasher, tokens, usecase.RegistrarConfig{
 		AccessTTLMin: cfg.JWTAccessTTLMin, RefreshTTLHor: cfg.JWTRefreshTTLHours,
 	})
 	loginUC := usecase.NewLoginUsuario(usuarioRepo, refreshRepo, hasher, tokens, tokenCfg)
