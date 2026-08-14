@@ -379,3 +379,7 @@ generate:     # gera código (sqlc, mocks)
 - [pgvector](https://github.com/pgvector/pgvector)
 - [chi router](https://github.com/go-chi/chi)
 - [pgx](https://github.com/jackc/pgx)
+
+## Creators
+-Bruno
+-Thiago
