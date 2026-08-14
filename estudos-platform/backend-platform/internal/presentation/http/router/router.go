@@ -29,6 +29,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	// ---- repositórios (infra) ----
 	usuarioRepo := pgrepo.NewUsuarioRepoPG(pool)
 	refreshRepo := pgrepo.NewRefreshTokenRepoPG(pool)
+	artigoRepo := pgrepo.NewArtigoRepoPG(pool)
 	trilhaRepo := pgrepo.NewTrilhaRepoPG(pool)
 
 	// ---- ports concretos (infra) ----
@@ -48,6 +49,15 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	perfilUC := usecase.NewObterPerfil(usuarioRepo)
 	logoutUC := usecase.NewLogoutUsuario(refreshRepo)
 
+	criarArtigoUC := usecase.NewCriarArtigo(artigoRepo)
+	obterArtigoUC := usecase.NewObterArtigo(artigoRepo)
+	listarArtigosUC := usecase.NewListarArtigos(artigoRepo)
+	atualizarArtigoUC := usecase.NewAtualizarArtigo(artigoRepo)
+	publicarArtigoUC := usecase.NewPublicarArtigo(artigoRepo)
+
+	// ---- handlers (apresentação) ----
+	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC)
+	artigos := handler.NewArtigoHandler(criarArtigoUC, obterArtigoUC, listarArtigosUC, atualizarArtigoUC, publicarArtigoUC)
 	// ---- handler (apresentação) ----
 	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC, logoutUC)
 	criarTrilhaUC := usecase.NewCriarTrilha(trilhaRepo)
@@ -65,12 +75,17 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 		api.Post("/auth/login", auth.Login)
 		api.Post("/auth/refresh", auth.Refresh)
 
+		api.Get("/artigos", artigos.Listar)
+		api.Get("/artigos/{slug}", artigos.Obter)
 		api.Get("/trilhas", trilhas.Listar)
 		api.Get("/trilhas/{slug}", trilhas.Obter)
 
 		api.Group(func(pr chi.Router) {
 			pr.Use(middleware.NewAutenticador(tokens).Proteger)
 			pr.Get("/auth/me", auth.Me)
+			pr.Post("/artigos", artigos.Criar)
+			pr.Put("/artigos/{id}", artigos.Atualizar)
+			pr.Post("/artigos/{id}/publicar", artigos.Publicar)
 			pr.Post("/auth/logout", auth.Logout)
 			pr.Post("/trilhas", trilhas.Criar)
 			pr.Post("/trilhas/{id}/modulos", trilhas.AdicionarModulo)

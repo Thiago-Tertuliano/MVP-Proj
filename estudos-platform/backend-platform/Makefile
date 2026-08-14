@@ -13,6 +13,11 @@ migrate-up:     ## aplica migrations
 	docker exec -i estudos-postgres psql -U estudos -d estudos_platform \
 	  < internal/infrastructure/persistence/postgres/migration/0001_create_usuario.up.sql
 	docker exec -i estudos-postgres psql -U estudos -d estudos_platform \
+	  < internal/infrastructure/persistence/postgres/migration/0002_create_artigos.up.sql
+
+migrate-down:   ## reverte migrations
+	docker exec -i estudos-postgres psql -U estudos -d estudos_platform \
+	  < internal/infrastructure/persistence/postgres/migration/0002_create_artigos.down.sql
 	  < internal/infrastructure/persistence/postgres/migration/0003_create_trilhas.up.sql
 
 migrate-down:   ## reverte migrations

@@ -56,6 +56,10 @@ func ErrUnauthorized(message, op string, err error) *DomainError {
 	return New(Unauthorized, message, op, err)
 }
 
+func ErrForbidden(message, op string, err error) *DomainError {
+	return New(Forbidden, message, op, err)
+}
+
 func ErrInternal(message, op string, err error) *DomainError {
 	return New(Internal, message, op, err)
 }
