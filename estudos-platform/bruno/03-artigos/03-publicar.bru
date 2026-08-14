@@ -1,0 +1,23 @@
+meta {
+  name: Publicar Artigo
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/artigos/{{artigoId}}/publicar
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Publica o artigo. Depois aparece no Listar / Obter por slug.
+}

@@ -1,0 +1,37 @@
+meta {
+  name: Refresh
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/refresh
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "refresh_token": "{{refreshToken}}"
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body && body.tokens) {
+    bru.setEnvVar("accessToken", body.tokens.access_token);
+    bru.setEnvVar("refreshToken", body.tokens.refresh_token);
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Rotaciona o par de tokens. O refresh antigo deixa de valer.
+}

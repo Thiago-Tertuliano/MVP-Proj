@@ -1,0 +1,54 @@
+meta {
+  name: Criar Artigo
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/artigos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "titulo": "DDD na Prática",
+    "subtitulo": "Aggregates, VOs e bounded contexts em Go",
+    "slug": "{{artigoSlug}}",
+    "conteudo": {
+      "blocks": [
+        { "type": "heading", "text": "Introdução" },
+        { "type": "paragraph", "text": "Como modelamos o domínio no Estudos Platform." }
+      ]
+    },
+    "metadados": {
+      "tempo_leitura_min": 8,
+      "tags": ["ddd", "go", "arquitetura"]
+    }
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body && body.id) {
+    bru.setEnvVar("artigoId", body.id);
+    bru.setEnvVar("artigoSlug", body.slug);
+  }
+}
+
+assert {
+  res.status: eq 201
+}
+
+docs {
+  Requer PR #8 mergeado (CRUD artigos).
+  Cria rascunho e salva `artigoId` / `artigoSlug` no env.
+}

@@ -28,6 +28,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	// ---- repositórios (infra) ----
 	usuarioRepo := pgrepo.NewUsuarioRepoPG(pool)
 	refreshRepo := pgrepo.NewRefreshTokenRepoPG(pool)
+	trilhaRepo := pgrepo.NewTrilhaRepoPG(pool)
 
 	// ---- ports concretos (infra) ----
 	hasher := external.NewBcryptHasher(10)
@@ -45,18 +46,30 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	refreshUC := usecase.NewRefreshTokenUC(refreshRepo, usuarioRepo, tokens, tokenCfg)
 	perfilUC := usecase.NewObterPerfil(usuarioRepo)
 
-	// ---- handler (apresentação) ----
+	criarTrilhaUC := usecase.NewCriarTrilha(trilhaRepo)
+	obterTrilhaUC := usecase.NewObterTrilha(trilhaRepo)
+	listarTrilhasUC := usecase.NewListarTrilhas(trilhaRepo)
+	adicionarModuloUC := usecase.NewAdicionarModulo(trilhaRepo)
+	publicarTrilhaUC := usecase.NewPublicarTrilha(trilhaRepo)
+
+	// ---- handlers (apresentação) ----
 	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC)
+	trilhas := handler.NewTrilhaHandler(criarTrilhaUC, obterTrilhaUC, listarTrilhasUC, adicionarModuloUC, publicarTrilhaUC)
 
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Post("/auth/registrar", auth.Registrar)
 		api.Post("/auth/login", auth.Login)
 		api.Post("/auth/refresh", auth.Refresh)
 
-		// grupo protegido por JWT
+		api.Get("/trilhas", trilhas.Listar)
+		api.Get("/trilhas/{slug}", trilhas.Obter)
+
 		api.Group(func(pr chi.Router) {
 			pr.Use(middleware.NewAutenticador(tokens).Proteger)
 			pr.Get("/auth/me", auth.Me)
+			pr.Post("/trilhas", trilhas.Criar)
+			pr.Post("/trilhas/{id}/modulos", trilhas.AdicionarModulo)
+			pr.Post("/trilhas/{id}/publicar", trilhas.Publicar)
 		})
 	})
 

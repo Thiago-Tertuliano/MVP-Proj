@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS modulos;
+DROP TABLE IF EXISTS trilhas;
