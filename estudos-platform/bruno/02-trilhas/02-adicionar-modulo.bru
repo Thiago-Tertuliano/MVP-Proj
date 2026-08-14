@@ -1,0 +1,36 @@
+meta {
+  name: Adicionar Modulo
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/trilhas/{{trilhaId}}/modulos
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "titulo": "Structs e Interfaces",
+    "descricao": "Tipos, methods e contratos em Go",
+    "slug": "structs-e-interfaces"
+  }
+}
+
+assert {
+  res.status: eq 201
+}
+
+docs {
+  Adiciona módulo à trilha. Exige `trilhaId` (rode Criar Trilha antes).
+  Trilha sem módulo não pode ser publicada.
+}

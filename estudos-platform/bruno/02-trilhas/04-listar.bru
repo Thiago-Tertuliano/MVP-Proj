@@ -1,0 +1,19 @@
+meta {
+  name: Listar Trilhas
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/trilhas?limit=20&offset=0
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Lista apenas trilhas publicadas (público, sem token).
+}

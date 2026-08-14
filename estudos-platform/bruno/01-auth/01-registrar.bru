@@ -1,0 +1,42 @@
+meta {
+  name: Registrar
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/registrar
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "nome": "{{nome}}",
+    "email": "{{email}}",
+    "senha": "{{senha}}"
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body && body.tokens) {
+    bru.setEnvVar("accessToken", body.tokens.access_token);
+    bru.setEnvVar("refreshToken", body.tokens.refresh_token);
+    bru.setEnvVar("usuarioId", body.usuario.id);
+  }
+}
+
+assert {
+  res.status: eq 201
+}
+
+docs {
+  Cria usuário e salva access/refresh no environment Local.
+  Se o e-mail já existir, retorna 409 — use Login ou mude `email` no env.
+  Na branch com PR #5 o refresh fica persistido no banco.
+}

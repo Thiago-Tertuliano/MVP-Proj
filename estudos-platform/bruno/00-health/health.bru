@@ -1,0 +1,20 @@
+meta {
+  name: Health
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/health
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body: eq ok
+}
+
+docs {
+  Smoke test. A API precisa estar no ar (`go run ./cmd/api`).
+}

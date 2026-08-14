@@ -1,0 +1,19 @@
+meta {
+  name: Obter Trilha
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/trilhas/{{trilhaSlug}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Detalhe da trilha publicada + módulos. 404 se não estiver publicada.
+}

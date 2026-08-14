@@ -1,0 +1,31 @@
+meta {
+  name: Logout
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/v1/auth/logout
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+script:post-response {
+  if (res.getStatus() === 200) {
+    bru.setEnvVar("refreshToken", "");
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Requer PR #7 mergeado (`POST /auth/logout`).
+  Revoga todos os refresh tokens do usuário.
+  Depois do logout, Refresh deve falhar com 401.
+}
