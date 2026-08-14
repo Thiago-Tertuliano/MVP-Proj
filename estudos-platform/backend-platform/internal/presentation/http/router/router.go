@@ -46,7 +46,10 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	loginUC := usecase.NewLoginUsuario(usuarioRepo, refreshRepo, hasher, tokens, tokenCfg)
 	refreshUC := usecase.NewRefreshTokenUC(refreshRepo, usuarioRepo, tokens, tokenCfg)
 	perfilUC := usecase.NewObterPerfil(usuarioRepo)
+	logoutUC := usecase.NewLogoutUsuario(refreshRepo)
 
+	// ---- handler (apresentação) ----
+	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC, logoutUC)
 	criarTrilhaUC := usecase.NewCriarTrilha(trilhaRepo)
 	obterTrilhaUC := usecase.NewObterTrilha(trilhaRepo)
 	listarTrilhasUC := usecase.NewListarTrilhas(trilhaRepo)
@@ -68,6 +71,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 		api.Group(func(pr chi.Router) {
 			pr.Use(middleware.NewAutenticador(tokens).Proteger)
 			pr.Get("/auth/me", auth.Me)
+			pr.Post("/auth/logout", auth.Logout)
 			pr.Post("/trilhas", trilhas.Criar)
 			pr.Post("/trilhas/{id}/modulos", trilhas.AdicionarModulo)
 			pr.Post("/trilhas/{id}/publicar", trilhas.Publicar)
