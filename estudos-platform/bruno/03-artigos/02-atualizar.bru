@@ -1,0 +1,44 @@
+meta {
+  name: Atualizar Artigo
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/v1/artigos/{{artigoId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "titulo": "DDD na Prática (atualizado)",
+    "subtitulo": "Aggregates, VOs e bounded contexts em Go",
+    "conteudo": {
+      "blocks": [
+        { "type": "heading", "text": "Introdução" },
+        { "type": "paragraph", "text": "Conteúdo revisado para publicação." }
+      ]
+    },
+    "metadados": {
+      "tempo_leitura_min": 10,
+      "tags": ["ddd", "go"]
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Só o autor consegue atualizar (Bearer do criador).
+}

@@ -1,0 +1,44 @@
+meta {
+  name: Criar Trilha
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/trilhas
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "titulo": "Go Básico",
+    "descricao": "Fundamentos de Go para a plataforma de estudos",
+    "slug": "{{trilhaSlug}}"
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body && body.id) {
+    bru.setEnvVar("trilhaId", body.id);
+    bru.setEnvVar("trilhaSlug", body.slug);
+  }
+}
+
+assert {
+  res.status: eq 201
+}
+
+docs {
+  Cria trilha (rascunho / não publicada). Salva `trilhaId` e `trilhaSlug` no env.
+  Se o slug já existir → 409; mude `trilhaSlug` no environment Local.
+}
