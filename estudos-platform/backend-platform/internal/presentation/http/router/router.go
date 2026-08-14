@@ -19,6 +19,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Recovery)
+	r.Use(middleware.NewCORS(cfg.CORSAllowedOrigins).Handler)
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
