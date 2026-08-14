@@ -1,0 +1,19 @@
+meta {
+  name: Listar Artigos
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/artigos?limit=20&offset=0
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Lista apenas artigos publicados (público).
+}

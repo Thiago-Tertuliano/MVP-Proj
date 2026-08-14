@@ -4,13 +4,14 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
 
 // Config centraliza todas as variáveis de ambiente da aplicação.
 type Config struct {
-	AppEnv string
+	AppEnv  string
 	AppPort string
 
 	DBHost     string
@@ -20,9 +21,11 @@ type Config struct {
 	DBName     string
 	DBSSLMode  string
 
-	JWTSecret        string
-	JWTAccessTTLMin  int
+	JWTSecret          string
+	JWTAccessTTLMin    int
 	JWTRefreshTTLHours int
+
+	CORSAllowedOrigins []string
 }
 
 func Load() *Config {
@@ -43,6 +46,8 @@ func Load() *Config {
 		JWTSecret:          getEnv("JWT_SECRET", ""),
 		JWTAccessTTLMin:    getEnvInt("JWT_ACCESS_TTL_MIN", 15),
 		JWTRefreshTTLHours: getEnvInt("JWT_REFRESH_TTL_HOURS", 168),
+
+		CORSAllowedOrigins: splitCSV(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000")),
 	}
 
 	if cfg.JWTSecret == "" {
@@ -65,4 +70,16 @@ func getEnvInt(key string, fallback int) int {
 		}
 	}
 	return fallback
+}
+
+func splitCSV(raw string) []string {
+	parts := strings.Split(raw, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
 }
