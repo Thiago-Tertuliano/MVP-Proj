@@ -26,17 +26,14 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 		_, _ = w.Write([]byte("ok"))
 	})
 
-	// ---- repositórios (infra) ----
 	usuarioRepo := pgrepo.NewUsuarioRepoPG(pool)
 	refreshRepo := pgrepo.NewRefreshTokenRepoPG(pool)
 	artigoRepo := pgrepo.NewArtigoRepoPG(pool)
 	trilhaRepo := pgrepo.NewTrilhaRepoPG(pool)
 
-	// ---- ports concretos (infra) ----
 	hasher := external.NewBcryptHasher(10)
 	tokens := external.NewJWTService(cfg.JWTSecret)
 
-	// ---- use cases (aplicação) ----
 	tokenCfg := usecase.TokenConfig{
 		AccessTTLMin:  cfg.JWTAccessTTLMin,
 		RefreshTTLHor: cfg.JWTRefreshTTLHours,
@@ -55,19 +52,14 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	atualizarArtigoUC := usecase.NewAtualizarArtigo(artigoRepo)
 	publicarArtigoUC := usecase.NewPublicarArtigo(artigoRepo)
 
-	// ---- handlers (apresentação) ----
-	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC)
-	artigos := handler.NewArtigoHandler(criarArtigoUC, obterArtigoUC, listarArtigosUC, atualizarArtigoUC, publicarArtigoUC)
-	// ---- handler (apresentação) ----
-	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC, logoutUC)
 	criarTrilhaUC := usecase.NewCriarTrilha(trilhaRepo)
 	obterTrilhaUC := usecase.NewObterTrilha(trilhaRepo)
 	listarTrilhasUC := usecase.NewListarTrilhas(trilhaRepo)
 	adicionarModuloUC := usecase.NewAdicionarModulo(trilhaRepo)
 	publicarTrilhaUC := usecase.NewPublicarTrilha(trilhaRepo)
 
-	// ---- handlers (apresentação) ----
-	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC)
+	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC, logoutUC)
+	artigos := handler.NewArtigoHandler(criarArtigoUC, obterArtigoUC, listarArtigosUC, atualizarArtigoUC, publicarArtigoUC)
 	trilhas := handler.NewTrilhaHandler(criarTrilhaUC, obterTrilhaUC, listarTrilhasUC, adicionarModuloUC, publicarTrilhaUC)
 
 	r.Route("/api/v1", func(api chi.Router) {
@@ -83,10 +75,10 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 		api.Group(func(pr chi.Router) {
 			pr.Use(middleware.NewAutenticador(tokens).Proteger)
 			pr.Get("/auth/me", auth.Me)
+			pr.Post("/auth/logout", auth.Logout)
 			pr.Post("/artigos", artigos.Criar)
 			pr.Put("/artigos/{id}", artigos.Atualizar)
 			pr.Post("/artigos/{id}/publicar", artigos.Publicar)
-			pr.Post("/auth/logout", auth.Logout)
 			pr.Post("/trilhas", trilhas.Criar)
 			pr.Post("/trilhas/{id}/modulos", trilhas.AdicionarModulo)
 			pr.Post("/trilhas/{id}/publicar", trilhas.Publicar)
