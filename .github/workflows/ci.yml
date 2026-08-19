@@ -8,8 +8,38 @@ on:
   workflow_dispatch:
 
 jobs:
+  branch-name:
+    name: branch-name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR branch name
+        env:
+          EVENT: ${{ github.event_name }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "Não é PR (push em dev / dispatch) — skip da validação de nome"
+            exit 0
+          fi
+
+          name=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]')
+          echo "branch=$name"
+
+          # type/descricao — se falhar, o job de build nem começa
+          if echo "$name" | grep -Eq '^(feat|fix|bug|ref|refactor|ci|docs|chore)/[a-z0-9._-]+$'; then
+            echo "nome de branch válido"
+            exit 0
+          fi
+
+          echo "::error::Branch inválida: '$BRANCH'"
+          echo "Use: type/descricao-em-kebab-case"
+          echo "Tipos: feat/  fix/  bug/  ref/  ci/  docs/  chore/"
+          echo "Exemplo: feat/vincular-artigo-trilha"
+          exit 1
+
   test:
     name: test-coverage-build
+    needs: branch-name
     runs-on: ubuntu-latest
     defaults:
       run:
