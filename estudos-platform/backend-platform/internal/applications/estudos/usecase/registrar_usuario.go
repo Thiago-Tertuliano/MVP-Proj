@@ -57,7 +57,7 @@ func (uc *RegistrarUsuario) Execute(ctx context.Context, req dto.RegistrarReques
 		return nil, errors.ErrInternal("falha ao verificar o email", "RegistrarUsuario.Execute", err)
 	}
 	if existe {
-		return nil, errors.ErrInternal("e-mail já existe.", "RegistrarUsuario.Execute", err)
+		return nil, errors.ErrAlreadyExists("e-mail já existe.", "RegistrarUsuario.Execute", err)
 	}
 
 	// 3. gera hash da senha via port (infra decide o algoritmo)
