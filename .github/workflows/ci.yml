@@ -1,32 +1,44 @@
 name: CI
+
 on:
   pull_request:
     branches: [dev]
   push:
     branches: [dev]
-
+  workflow_dispatch:
 
 jobs:
   test:
+    name: test-coverage-build
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: estudos-platform/backend-platform
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-go@v5
-        with: 
+        with:
           go-version: "1.26.1"
+          cache-dependency-path: estudos-platform/backend-platform/go.sum
+
       - name: Test + coverage
         run: go test ./internal/... -race -coverprofile=coverage.out -covermode=atomic
-      - name: coverage gate (50%)
+
+      - name: Coverage gate (50%)
         run: |
           pct=$(go tool cover -func=coverage.out | tail -n1 | awk '{print $3}' | tr -d '%')
           echo "coverage=${pct}%"
+          echo "## Coverage" >> "$GITHUB_STEP_SUMMARY"
+          echo "**${pct}%** (mínimo 50%)" >> "$GITHUB_STEP_SUMMARY"
           awk -v p="$pct" 'BEGIN { exit (p+0 < 50) }'
+
       - name: Build
-        run: go build -o /temp/api ./cmd/api
+        run: go build -o /tmp/api ./cmd/api
+
       - uses: actions/upload-artifact@v4
-        with: 
+        if: always()
+        with:
           name: coverage
           path: estudos-platform/backend-platform/coverage.out
+          if-no-files-found: ignore
