@@ -3,6 +3,7 @@ name: CI
 on:
   pull_request:
     branches: [dev]
+    types: [opened, edited, synchronize, reopened]
   push:
     branches: [dev]
   workflow_dispatch:
@@ -25,7 +26,6 @@ jobs:
           name=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]')
           echo "branch=$name"
 
-          # type/descricao — se falhar, o job de build nem começa
           if echo "$name" | grep -Eq '^(feat|fix|bug|ref|refactor|ci|docs|chore)/[a-z0-9._-]+$'; then
             echo "nome de branch válido"
             exit 0
@@ -36,6 +36,54 @@ jobs:
           echo "Tipos: feat/  fix/  bug/  ref/  ci/  docs/  chore/"
           echo "Exemplo: feat/vincular-artigo-trilha"
           exit 1
+
+      - name: Validate PR title
+        env:
+          EVENT: ${{ github.event_name }}
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "Não é PR — skip da validação de título"
+            exit 0
+          fi
+
+          echo "title=$TITLE"
+          # feat: texto  |  feat(escopo): texto  |  fix, bug, ref, ci, docs, chore
+          if echo "$TITLE" | grep -Eq '^(feat|fix|bug|ref|refactor|ci|docs|chore)(\([a-z0-9_-]+\))?: .+'; then
+            echo "título de PR válido"
+            exit 0
+          fi
+
+          echo "::error::Título de PR inválido: '$TITLE'"
+          echo "Use conventional commits: tipo: descrição"
+          echo "Tipos: feat:  fix:  bug:  ref:  ci:  docs:  chore:"
+          echo "Exemplo: feat: vincula artigo à trilha"
+          echo "Com escopo: feat(auth): persiste refresh no registro"
+          exit 1
+
+  lint:
+    name: lint
+    needs: branch-name
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: estudos-platform/backend-platform
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.1"
+          cache-dependency-path: estudos-platform/backend-platform/go.sum
+
+      - name: go vet
+        run: go vet ./...
+
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+          working-directory: estudos-platform/backend-platform
+          args: --timeout=5m
 
   test:
     name: test-coverage-build
