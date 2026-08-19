@@ -30,6 +30,9 @@ func MapPG(err error, op string) error {
 			op,
 			err,
 		)
+	case pgUniqueViolation, pgForeignKey:
+		// 23505/23503 já são tratados no repo (Save, Upsert). MapPG não reescreve.
+		return err
 	default:
 		return err
 	}
