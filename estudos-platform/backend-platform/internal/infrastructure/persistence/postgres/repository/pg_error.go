@@ -7,10 +7,10 @@ import (
 	domainErrors "github.com/thiago-tertuliano/estudos-platform/internal/domain/shared/errors"
 )
 
-const ( 
-	pgUndefinedTable = "42P01"
+const (
+	pgUndefinedTable  = "42P01"
 	pgUniqueViolation = "23505"
-	pgForeignKey = "23503"
+	pgForeignKey      = "23503"
 )
 
 func MapPG(err error, op string) error {
@@ -26,7 +26,7 @@ func MapPG(err error, op string) error {
 	switch pgErr.Code {
 	case pgUndefinedTable:
 		return domainErrors.ErrInternal(
-			"banco sem tabelas - rode .\\scripts\\migrate.up.ps1",
+			"banco sem tabelas — rode .\\scripts\\migrate-up.ps1",
 			op,
 			err,
 		)
