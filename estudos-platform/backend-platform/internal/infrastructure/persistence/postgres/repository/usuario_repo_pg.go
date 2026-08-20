@@ -65,7 +65,7 @@ func (r *UsuarioRepoPG) EmailExiste(ctx context.Context, email valueobject.Email
 		`SELECT EXISTS(SELECT 1 FROM usuarios WHERE email = $1)`, email.Value(),
 	).Scan(&existe)
 	if err != nil {
-		return false, MapPG(err, "usuario_pg.EmailExiste")
+		return false, MapPG(err, "usuario_repo_pg.EmailExiste")
 	}
 	return existe, nil
 }
