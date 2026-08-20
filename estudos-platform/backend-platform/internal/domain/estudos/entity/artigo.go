@@ -22,6 +22,8 @@ type Artigo struct {
 	autorID     uuid.UUID
 	status      valueobject.ArtigoStatus
 	publicadoEm *time.Time
+	trilhaID    *uuid.UUID // Adcionado (Sprint A1)
+	moduloID    *uuid.UUID // Adcionado (Sprint A1)
 }
 
 type NovoArtigoInput struct {
@@ -32,6 +34,8 @@ type NovoArtigoInput struct {
 	Metadados json.RawMessage
 	Slug      valueobject.Slug
 	AutorID   uuid.UUID
+	TrilhaID  *uuid.UUID // Adcionado (Sprint A1)
+	ModuloID  *uuid.UUID // Adcionado (Sprint A1)
 }
 
 func NovoArtigo(in NovoArtigoInput) (*Artigo, error) {
