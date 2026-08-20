@@ -4,8 +4,8 @@ import "context"
 
 type ProgressoArtigo struct {
 	UsuarioID string
-	ArtigoID string
-	TrilhaID *string
+	ArtigoID  string
+	TrilhaID  *string
 	Concluido bool
 }
 

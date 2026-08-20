@@ -6,7 +6,8 @@ $mig = Join-Path $root "internal\infrastructure\persistence\postgres\migration"
 $files = @(
     "0001_create_usuario.up.sql",
     "0002_create_artigos.up.sql",
-    "0003_create_trilhas.up.sql"
+    "0003_create_trilhas.up.sql",
+    "0005_create_progresso.up.sql"
 )
 
 foreach ($f in $files) {
