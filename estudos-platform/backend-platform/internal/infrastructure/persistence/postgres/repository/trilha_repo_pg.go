@@ -27,7 +27,7 @@ func (r *TrilhaRepoPG) Save(ctx context.Context, t *entity.Trilha) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	_, err = tx.Exec(ctx, `
 		INSERT INTO trilhas (id, slug, titulo, descricao, capa_url, ordem, publicada, created_at, updated_at)

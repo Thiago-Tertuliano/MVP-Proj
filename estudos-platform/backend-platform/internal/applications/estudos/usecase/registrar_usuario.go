@@ -50,6 +50,10 @@ func (uc *RegistrarUsuario) Execute(ctx context.Context, req dto.RegistrarReques
 	// 2. garante unicidade (invariante de negócio)
 	existe, err := uc.repo.EmailExiste(ctx, email)
 	if err != nil {
+		var de *errors.DomainError
+		if stderrors.As(err, &de) {
+			return nil, err
+		}
 		return nil, errors.ErrInternal("falha ao verificar e-mail", "RegistrarUsuario.Execute", err)
 	}
 	if existe {

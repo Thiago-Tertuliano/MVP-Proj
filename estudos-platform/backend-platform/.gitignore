@@ -9,6 +9,7 @@ bin/
 *.out
 coverage.out
 cover.html
+coverage/
 
 # Air (hot reload) artifacts
 tmp/

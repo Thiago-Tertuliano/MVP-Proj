@@ -64,7 +64,10 @@ func (r *UsuarioRepoPG) EmailExiste(ctx context.Context, email valueobject.Email
 	err := r.pool.QueryRow(ctx,
 		`SELECT EXISTS(SELECT 1 FROM usuarios WHERE email = $1)`, email.Value(),
 	).Scan(&existe)
-	return existe, err
+	if err != nil {
+		return false, MapPG(err, "usuario_repo_pg.EmailExiste")
+	}
+	return existe, nil
 }
 
 func scanUsuario(row pgx.Row) (*entity.Usuario, error) {

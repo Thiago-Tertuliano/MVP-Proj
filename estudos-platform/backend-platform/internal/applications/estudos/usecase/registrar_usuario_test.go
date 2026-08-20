@@ -121,3 +121,26 @@ func TestRegistrar_ErroNoRepo(t *testing.T) {
 		t.Errorf("esperava Internal, got %#v", err)
 	}
 }
+
+func TestRegistrar_TabelaAusenteNaoMascaraMensagem(t *testing.T) {
+	// LIVE: simula o que o repo devolve depois do MapPG.
+	msg := "banco sem tabelas — rode .\\scripts\\migrate-up.ps1"
+	repo := &MockUsuarioRepository{
+		EmailExisteFn: func(ctx context.Context, email valueobject.Email) (bool, error) {
+			return false, domainErros.ErrInternal(msg, "usuario_repo_pg.EmailExiste", nil)
+		},
+	}
+	uc := novoRegistrar(repo, &MockRefreshTokenRepository{}, &MockSenhaHasher{}, &MockTokenGerador{})
+
+	_, err := uc.Execute(context.Background(), dto.RegistrarRequest{
+		Nome: "Thiago", Email: "t@ex.com", Senha: "senha123",
+	})
+
+	de, ok := err.(*domainErros.DomainError)
+	if !ok {
+		t.Fatalf("esperava DomainError, got %#v", err)
+	}
+	if de.Message != msg {
+		t.Errorf("mensagem mascarada: %q", de.Message)
+	}
+}

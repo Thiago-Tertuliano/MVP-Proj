@@ -30,6 +30,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	refreshRepo := pgrepo.NewRefreshTokenRepoPG(pool)
 	artigoRepo := pgrepo.NewArtigoRepoPG(pool)
 	trilhaRepo := pgrepo.NewTrilhaRepoPG(pool)
+	progressoRepo := pgrepo.NewProgressoRepoPG(pool)
 
 	hasher := external.NewBcryptHasher(10)
 	tokens := external.NewJWTService(cfg.JWTSecret)
@@ -57,10 +58,12 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	listarTrilhasUC := usecase.NewListarTrilhas(trilhaRepo)
 	adicionarModuloUC := usecase.NewAdicionarModulo(trilhaRepo)
 	publicarTrilhaUC := usecase.NewPublicarTrilha(trilhaRepo)
+	marcarLidoUC := usecase.NewMarcarArtigoLido(artigoRepo, progressoRepo)
 
 	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC, logoutUC)
 	artigos := handler.NewArtigoHandler(criarArtigoUC, obterArtigoUC, listarArtigosUC, atualizarArtigoUC, publicarArtigoUC)
 	trilhas := handler.NewTrilhaHandler(criarTrilhaUC, obterTrilhaUC, listarTrilhasUC, adicionarModuloUC, publicarTrilhaUC)
+	progresso := handler.NewProgressoHandler(marcarLidoUC)
 
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Post("/auth/registrar", auth.Registrar)
@@ -82,6 +85,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 			pr.Post("/trilhas", trilhas.Criar)
 			pr.Post("/trilhas/{id}/modulos", trilhas.AdicionarModulo)
 			pr.Post("/trilhas/{id}/publicar", trilhas.Publicar)
+			pr.Put("/progresso/artigos/{id}", progresso.MarcarArtigo)
 		})
 	})
 

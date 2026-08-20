@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev]
+    types: [opened, edited, synchronize, reopened]
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+jobs:
+  branch-name:
+    name: branch-name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR branch name
+        env:
+          EVENT: ${{ github.event_name }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "Não é PR (push em dev / dispatch) — skip da validação de nome"
+            exit 0
+          fi
+
+          name=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]')
+          echo "branch=$name"
+
+          if echo "$name" | grep -Eq '^(feat|fix|bug|ref|refactor|ci|docs|chore)/[a-z0-9._-]+$'; then
+            echo "nome de branch válido"
+            exit 0
+          fi
+
+          echo "::error::Branch inválida: '$BRANCH'"
+          echo "Use: type/descricao-em-kebab-case"
+          echo "Tipos: feat/  fix/  bug/  ref/  ci/  docs/  chore/"
+          echo "Exemplo: feat/vincular-artigo-trilha"
+          exit 1
+
+      - name: Validate PR title
+        env:
+          EVENT: ${{ github.event_name }}
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "Não é PR — skip da validação de título"
+            exit 0
+          fi
+
+          echo "title=$TITLE"
+          # feat: texto  |  feat(escopo): texto  |  fix, bug, ref, ci, docs, chore
+          if echo "$TITLE" | grep -Eq '^(feat|fix|bug|ref|refactor|ci|docs|chore)(\([a-z0-9_-]+\))?: .+'; then
+            echo "título de PR válido"
+            exit 0
+          fi
+
+          echo "::error::Título de PR inválido: '$TITLE'"
+          echo "Use conventional commits: tipo: descrição"
+          echo "Tipos: feat:  fix:  bug:  ref:  ci:  docs:  chore:"
+          echo "Exemplo: feat: vincula artigo à trilha"
+          echo "Com escopo: feat(auth): persiste refresh no registro"
+          exit 1
+
+  lint:
+    name: lint
+    needs: branch-name
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: estudos-platform/backend-platform
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.1"
+          cache-dependency-path: estudos-platform/backend-platform/go.sum
+
+      - name: go vet
+        run: go vet ./...
+
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+          working-directory: estudos-platform/backend-platform
+          args: --timeout=5m
+
+  test:
+    name: test-coverage-build
+    needs: branch-name
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: estudos-platform/backend-platform
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.1"
+          cache-dependency-path: estudos-platform/backend-platform/go.sum
+
+      - name: Test + coverage
+        run: go test ./internal/... -race -coverprofile=coverage.out -covermode=atomic
+
+      - name: Coverage gate (35%)
+        run: |
+          pct=$(go tool cover -func=coverage.out | tail -n1 | awk '{print $3}' | tr -d '%')
+          echo "coverage=${pct}%"
+          echo "## Coverage" >> "$GITHUB_STEP_SUMMARY"
+          echo "**${pct}%** (mínimo 35% — piso atual; subir quando houver mais testes)" >> "$GITHUB_STEP_SUMMARY"
+          awk -v p="$pct" 'BEGIN { exit (p+0 < 35) }'
+
+      - name: Build
+        run: go build -o /tmp/api ./cmd/api
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: estudos-platform/backend-platform/coverage.out
+          if-no-files-found: ignore

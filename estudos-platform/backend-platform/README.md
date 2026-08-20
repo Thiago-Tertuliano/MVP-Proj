@@ -1,6 +1,10 @@
 # Estudos Platform — Backend (Go + DDD)
 
+[![CI](https://github.com/Thiago-Tertuliano/MVP-Proj/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/Thiago-Tertuliano/MVP-Proj/actions/workflows/ci.yml)
+
 API monolítica modular em Go para a plataforma de estudos de TI. Segue **Domain-Driven Design (DDD)** estrito, **Vertical Slicing** por funcionalidade e **PostgreSQL + pgvector** para conteúdo dinâmico e busca semântica.
+
+PRs contra `dev`: branch `tipo/descricao` (`feat/`, `fix/`, `bug/`, `ref/`, `ci/`, `docs/`, `chore/`) e título conventional (`feat: …`, `fix(auth): …`). Sem isso o job `branch-name` falha e o build/lint não rodam.
 
 ---
 
