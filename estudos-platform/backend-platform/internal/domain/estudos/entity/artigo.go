@@ -58,6 +58,11 @@ func NovoArtigo(in NovoArtigoInput) (*Artigo, error) {
 		return nil, errors.ErrInvalidArgument("autor_id obrigatório", "entity.NovoArtigo", nil)
 	}
 
+	// Adcionado (Sprint A1): Não pode existir módulo órfão sem trilha
+	if in.ModuloID != nil && in .TrilhaID == nil {
+		return nil, errors.ErrInvalidArgument("módulo órfão sem trilha", "entity.NovoArtigo", nil)
+	}
+
 	return &Artigo{
 		BaseEntity: kernel.NewBaseEntity(),
 		slug:       in.Slug,
@@ -80,6 +85,7 @@ func ReconstruirArtigo(
 	status valueobject.ArtigoStatus,
 	publicadoEm *time.Time,
 	createdAt, updatedAt time.Time,
+	trilhaID, moduloID *uuid.UUID, // Adicionado (Sprint A1)
 ) *Artigo {
 	return &Artigo{
 		BaseEntity:  kernel.NewBaseEntityWithID(id, createdAt, updatedAt),
@@ -92,6 +98,8 @@ func ReconstruirArtigo(
 		autorID:     autorID,
 		status:      status,
 		publicadoEm: publicadoEm,
+		trilhaID:    trilhaID, // Adicionado (Sprint A1)
+		moduloID:    moduloID, // Adicionado (Sprint A1)
 	}
 }
 
@@ -104,6 +112,8 @@ func (a *Artigo) Metadados() json.RawMessage          { return a.metadados }
 func (a *Artigo) AutorID() uuid.UUID                  { return a.autorID }
 func (a *Artigo) Status() valueobject.ArtigoStatus    { return a.status }
 func (a *Artigo) PublicadoEm() *time.Time             { return a.publicadoEm }
+func (a *Artigo) TrilhaID() *uuid.UUID                { return a.trilhaID } // Adicionado (Sprint A1)
+func (a *Artigo) ModuloID() *uuid.UUID                { return a.moduloID } // Adicionado (Sprint A1)
 
 func (a *Artigo) AtualizarConteudo(titulo, subtitulo, capaURL string, conteudo, metadados json.RawMessage) error {
 	if a.status == valueobject.ArtigoStatusArquivado {
@@ -132,6 +142,12 @@ func (a *Artigo) AtualizarConteudo(titulo, subtitulo, capaURL string, conteudo, 
 	a.Touch()
 	return nil
 }
+//Adicionado (Sprint A1): Vincular trilha e módulo
+// func (a *Artigo) VincularTrilhaEModulo(trilhaID, moduloID *uuid.UUID) error {
+// 	if moduloID != nil && trilhaID == nil {
+// 		???
+// 	}
+// }
 
 func (a *Artigo) EnviarParaRevisao() error {
 	if a.status != valueobject.ArtigoStatusRascunho {
