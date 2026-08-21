@@ -143,6 +143,8 @@ func scanArtigo(row scannable) (*entity.Artigo, error) {
 		publicadoEm,
 		createdAt,
 		updatedAt,
+		nil, // Adicionado (Sprint A1): trilhaID
+		nil, // Adicionado (Sprint A1): moduloID
 	), nil
 }
 
