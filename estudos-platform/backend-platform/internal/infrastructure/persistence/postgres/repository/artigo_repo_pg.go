@@ -130,6 +130,8 @@ func scanArtigo(row scannable) (*entity.Artigo, error) {
 	if err != nil {
 		return nil, err
 	}
+	var trilhaID, moduloID *uuid.UUID // Adicionado (Sprint A1)
+	
 	return entity.ReconstruirArtigo(
 		id,
 		valueobject.ReconstructSlug(slug),
@@ -143,8 +145,8 @@ func scanArtigo(row scannable) (*entity.Artigo, error) {
 		publicadoEm,
 		createdAt,
 		updatedAt,
-		nil, // Adicionado (Sprint A1): trilhaID
-		nil, // Adicionado (Sprint A1): moduloID
+		trilhaID,
+		moduloID,
 	), nil
 }
 
