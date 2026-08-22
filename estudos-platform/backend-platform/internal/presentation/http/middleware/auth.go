@@ -26,12 +26,21 @@ func NewAutenticador(tokens port.TokenGerador) *Autenticador {
 func (a *Autenticador) Proteger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		header := r.Header.Get("Authorization")
-		if !strings.HasPrefix(header, "Bearer ") {
+		token := ""
+		if strings.HasPrefix(header, "Bearer ") {
+			token = strings.TrimPrefix(header, "Bearer ")
+		}
+		if token == "" {
+			if c, err := r.Cookie("access_token"); err == nil {
+				token = c.Value
+			}
+		}
+		if token == "" {
 			escreverErroJSON(w, http.StatusUnauthorized, "token ausente")
 			return
 		}
 
-		claims, err := a.tokens.ValidarAccessToken(strings.TrimPrefix(header, "Bearer "))
+		claims, err := a.tokens.ValidarAccessToken(token)
 		if err != nil {
 			escreverErroJSON(w, http.StatusUnauthorized, "token inválido")
 			return

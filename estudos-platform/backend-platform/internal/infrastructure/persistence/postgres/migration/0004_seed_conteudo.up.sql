@@ -1,10 +1,10 @@
--- autor fixo só para demo (senha = senha1234, hash bcrypt de exemplo)
+-- autor de demo. senha = senha1234
 INSERT INTO usuarios (id, nome, email, senha_hash, status)
 VALUES (
   '11111111-1111-1111-1111-111111111111',
   'Autor Seed',
   'autor.seed@estudos.local',
-  '$2a$10$abcdefghijklmnopqrstuv', -- troca pelo hash real via Register no Bruno
+  '$2a$10$GnWGzZlXrOg9M.dqhPxVR.qVwdW1.MKsO7lVtsv.iupzECQ089Em2',
   'ativa'
 ) ON CONFLICT (email) DO NOTHING;
 

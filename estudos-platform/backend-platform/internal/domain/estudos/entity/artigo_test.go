@@ -31,6 +31,20 @@ func TestNovoArtigo_EPublicar(t *testing.T) {
 	}
 }
 
+func TestNovoArtigo_ModuloOrfao(t *testing.T) {
+	slug, _ := valueobject.NewSlug("orfao")
+	mod := uuid.New()
+	_, err := NovoArtigo(NovoArtigoInput{
+		Titulo:   "Órfão",
+		Slug:     slug,
+		AutorID:  uuid.New(),
+		ModuloID: &mod,
+	})
+	if de, ok := err.(*domainErros.DomainError); !ok || de.Kind != domainErros.InvalidArgument {
+		t.Fatalf("esperava InvalidArgument, got %#v", err)
+	}
+}
+
 func TestArtigo_PublicarConteudoVazio(t *testing.T) {
 	slug, _ := valueobject.NewSlug("vazio")
 	a, err := NovoArtigo(NovoArtigoInput{

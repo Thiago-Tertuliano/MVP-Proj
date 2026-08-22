@@ -58,8 +58,7 @@ func NovoArtigo(in NovoArtigoInput) (*Artigo, error) {
 		return nil, errors.ErrInvalidArgument("autor_id obrigatório", "entity.NovoArtigo", nil)
 	}
 
-	// Adcionado (Sprint A1): Não pode existir módulo órfão sem trilha
-	if in.ModuloID != nil && in .TrilhaID == nil {
+	if in.ModuloID != nil && in.TrilhaID == nil {
 		return nil, errors.ErrInvalidArgument("módulo órfão sem trilha", "entity.NovoArtigo", nil)
 	}
 
@@ -73,6 +72,8 @@ func NovoArtigo(in NovoArtigoInput) (*Artigo, error) {
 		metadados:  in.Metadados,
 		autorID:    in.AutorID,
 		status:     valueobject.ArtigoStatusRascunho,
+		trilhaID:   in.TrilhaID,
+		moduloID:   in.ModuloID,
 	}, nil
 }
 
@@ -103,17 +104,17 @@ func ReconstruirArtigo(
 	}
 }
 
-func (a *Artigo) Slug() valueobject.Slug              { return a.slug }
-func (a *Artigo) Titulo() string                      { return a.titulo }
-func (a *Artigo) Subtitulo() string                   { return a.subtitulo }
-func (a *Artigo) CapaURL() string                     { return a.capaURL }
-func (a *Artigo) Conteudo() json.RawMessage           { return a.conteudo }
-func (a *Artigo) Metadados() json.RawMessage          { return a.metadados }
-func (a *Artigo) AutorID() uuid.UUID                  { return a.autorID }
-func (a *Artigo) Status() valueobject.ArtigoStatus    { return a.status }
-func (a *Artigo) PublicadoEm() *time.Time             { return a.publicadoEm }
-func (a *Artigo) TrilhaID() *uuid.UUID                { return a.trilhaID } // Adicionado (Sprint A1)
-func (a *Artigo) ModuloID() *uuid.UUID                { return a.moduloID } // Adicionado (Sprint A1)
+func (a *Artigo) Slug() valueobject.Slug           { return a.slug }
+func (a *Artigo) Titulo() string                   { return a.titulo }
+func (a *Artigo) Subtitulo() string                { return a.subtitulo }
+func (a *Artigo) CapaURL() string                  { return a.capaURL }
+func (a *Artigo) Conteudo() json.RawMessage        { return a.conteudo }
+func (a *Artigo) Metadados() json.RawMessage       { return a.metadados }
+func (a *Artigo) AutorID() uuid.UUID               { return a.autorID }
+func (a *Artigo) Status() valueobject.ArtigoStatus { return a.status }
+func (a *Artigo) PublicadoEm() *time.Time          { return a.publicadoEm }
+func (a *Artigo) TrilhaID() *uuid.UUID             { return a.trilhaID } // Adicionado (Sprint A1)
+func (a *Artigo) ModuloID() *uuid.UUID             { return a.moduloID } // Adicionado (Sprint A1)
 
 func (a *Artigo) AtualizarConteudo(titulo, subtitulo, capaURL string, conteudo, metadados json.RawMessage) error {
 	if a.status == valueobject.ArtigoStatusArquivado {
@@ -142,12 +143,16 @@ func (a *Artigo) AtualizarConteudo(titulo, subtitulo, capaURL string, conteudo, 
 	a.Touch()
 	return nil
 }
-//Adicionado (Sprint A1): Vincular trilha e módulo
-// func (a *Artigo) VincularTrilhaEModulo(trilhaID, moduloID *uuid.UUID) error {
-// 	if moduloID != nil && trilhaID == nil {
-// 		???
-// 	}
-// }
+
+func (a *Artigo) VincularTrilhaEModulo(trilhaID, moduloID *uuid.UUID) error {
+	if moduloID != nil && trilhaID == nil {
+		return errors.ErrInvalidArgument("módulo órfão sem trilha", "Artigo.VincularTrilhaEModulo", nil)
+	}
+	a.trilhaID = trilhaID
+	a.moduloID = moduloID
+	a.Touch()
+	return nil
+}
 
 func (a *Artigo) EnviarParaRevisao() error {
 	if a.status != valueobject.ArtigoStatusRascunho {

@@ -116,15 +116,15 @@ type trilhaRow interface {
 
 func (r *TrilhaRepoPG) scanTrilhaComModulos(ctx context.Context, row trilhaRow) (*entity.Trilha, error) {
 	var (
-		id         uuid.UUID
-		slug       string
-		titulo     string
-		descricao  *string
-		capaURL    *string
-		ordem      int
-		publicada  bool
-		createdAt  time.Time
-		updatedAt  time.Time
+		id        uuid.UUID
+		slug      string
+		titulo    string
+		descricao *string
+		capaURL   *string
+		ordem     int
+		publicada bool
+		createdAt time.Time
+		updatedAt time.Time
 	)
 	if err := row.Scan(&id, &slug, &titulo, &descricao, &capaURL, &ordem, &publicada, &createdAt, &updatedAt); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

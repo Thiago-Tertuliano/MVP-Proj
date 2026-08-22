@@ -37,23 +37,23 @@ func ReconstruirModulo(id uuid.UUID, slug valueobject.Slug, titulo, descricao st
 	return &Modulo{id: id, slug: slug, titulo: titulo, descricao: descricao, ordem: ordem, createdAt: createdAt}
 }
 
-func (m *Modulo) ID() uuid.UUID            { return m.id }
-func (m *Modulo) Slug() valueobject.Slug   { return m.slug }
-func (m *Modulo) Titulo() string           { return m.titulo }
-func (m *Modulo) Descricao() string        { return m.descricao }
-func (m *Modulo) Ordem() int               { return m.ordem }
-func (m *Modulo) CreatedAt() time.Time     { return m.createdAt }
+func (m *Modulo) ID() uuid.UUID          { return m.id }
+func (m *Modulo) Slug() valueobject.Slug { return m.slug }
+func (m *Modulo) Titulo() string         { return m.titulo }
+func (m *Modulo) Descricao() string      { return m.descricao }
+func (m *Modulo) Ordem() int             { return m.ordem }
+func (m *Modulo) CreatedAt() time.Time   { return m.createdAt }
 
 // Trilha é Aggregate Root de trilhas de estudo.
 type Trilha struct {
 	kernel.BaseEntity
-	slug       valueobject.Slug
-	titulo     string
-	descricao  string
-	capaURL    string
-	ordem      int
-	publicada  bool
-	modulos    []*Modulo
+	slug      valueobject.Slug
+	titulo    string
+	descricao string
+	capaURL   string
+	ordem     int
+	publicada bool
+	modulos   []*Modulo
 }
 
 type NovaTrilhaInput struct {

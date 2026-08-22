@@ -16,12 +16,17 @@ type MarcarArtigoLidoUseCase interface {
 	Execute(ctx context.Context, usuarioID, artigoID string, concluido bool) (*dto.ProgressoArtigoResponse, error)
 }
 
-type ProgressoHandler struct {
-	marcar MarcarArtigoLidoUseCase
+type ObterProgressoTrilhaUseCase interface {
+	Execute(ctx context.Context, usuarioID, trilhaID string) (*dto.ProgressoTrilhaResponse, error)
 }
 
-func NewProgressoHandler(marcar MarcarArtigoLidoUseCase) *ProgressoHandler {
-	return &ProgressoHandler{marcar: marcar}
+type ProgressoHandler struct {
+	marcar MarcarArtigoLidoUseCase
+	obter  ObterProgressoTrilhaUseCase
+}
+
+func NewProgressoHandler(marcar MarcarArtigoLidoUseCase, obter ObterProgressoTrilhaUseCase) *ProgressoHandler {
+	return &ProgressoHandler{marcar: marcar, obter: obter}
 }
 
 func (h *ProgressoHandler) MarcarArtigo(w http.ResponseWriter, r *http.Request) {
@@ -35,6 +40,17 @@ func (h *ProgressoHandler) MarcarArtigo(w http.ResponseWriter, r *http.Request) 
 	artigoID := chi.URLParam(r, "id")
 
 	resp, err := h.marcar.Execute(r.Context(), usuarioID, artigoID, req.Concluido)
+	if err != nil {
+		h.escreverErro(w, err)
+		return
+	}
+	h.escreverJSON(w, http.StatusOK, resp)
+}
+
+func (h *ProgressoHandler) ObterTrilha(w http.ResponseWriter, r *http.Request) {
+	usuarioID, _ := r.Context().Value(middleware.CtxUsuarioID).(string)
+	trilhaID := chi.URLParam(r, "id")
+	resp, err := h.obter.Execute(r.Context(), usuarioID, trilhaID)
 	if err != nil {
 		h.escreverErro(w, err)
 		return
