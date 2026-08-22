@@ -27,7 +27,8 @@ func (uc *MarcarArtigoLido) Execute(ctx context.Context, usuarioID, artigoID str
 		return nil, errors.ErrInvalidArgument("artigo_id inválido", "MarcarArtigoLido.Execute", err)
 	}
 
-	if _, err := uc.artigos.FindByID(ctx, artigoID); err != nil {
+	artigo, err := uc.artigos.FindByID(ctx, artigoID)
+	if err != nil {
 		var de *errors.DomainError
 		if stderrors.As(err, &de) {
 			return nil, err
@@ -38,7 +39,7 @@ func (uc *MarcarArtigoLido) Execute(ctx context.Context, usuarioID, artigoID str
 	p := repository.ProgressoArtigo{
 		UsuarioID: usuarioID,
 		ArtigoID:  artigoID,
-		TrilhaID:  nil, // B2: preencher quando A1 ligar artigo à trilha
+		TrilhaID:  uuidPtrString(artigo.TrilhaID()),
 		Concluido: concluido,
 	}
 	if err := uc.progresso.UpsertArtigo(ctx, p); err != nil {

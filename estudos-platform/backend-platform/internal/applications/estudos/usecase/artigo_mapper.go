@@ -23,5 +23,7 @@ func toArtigoResponse(a *entity.Artigo) *dto.ArtigoResponse {
 		ts := pe.Unix()
 		resp.PublicadoEm = &ts
 	}
+	resp.TrilhaID = uuidPtrString(a.TrilhaID())
+	resp.ModuloID = uuidPtrString(a.ModuloID())
 	return resp
 }

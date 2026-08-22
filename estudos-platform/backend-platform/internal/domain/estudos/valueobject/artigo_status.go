@@ -5,10 +5,10 @@ import "github.com/thiago-tertuliano/estudos-platform/internal/domain/shared/err
 type ArtigoStatus string
 
 const (
-	ArtigoStatusRascunho   ArtigoStatus = "rascunho"
-	ArtigoStatusRevisao    ArtigoStatus = "revisao"
-	ArtigoStatusPublicado  ArtigoStatus = "publicado"
-	ArtigoStatusArquivado  ArtigoStatus = "arquivado"
+	ArtigoStatusRascunho  ArtigoStatus = "rascunho"
+	ArtigoStatusRevisao   ArtigoStatus = "revisao"
+	ArtigoStatusPublicado ArtigoStatus = "publicado"
+	ArtigoStatusArquivado ArtigoStatus = "arquivado"
 )
 
 func ParseArtigoStatus(raw string) (ArtigoStatus, error) {

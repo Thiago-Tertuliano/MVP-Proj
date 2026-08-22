@@ -49,10 +49,10 @@ func ReconstruirUsuario(id uuid.UUID, nome string, email valueobject.Email, senh
 	}
 }
 
-func (u *Usuario) Nome() string                { return u.nome }
-func (u *Usuario) Email() valueobject.Email    { return u.email }
+func (u *Usuario) Nome() string                     { return u.nome }
+func (u *Usuario) Email() valueobject.Email         { return u.email }
 func (u *Usuario) SenhaHash() valueobject.SenhaHash { return u.senhaHash }
-func (u *Usuario) Status() StatusConta         { return u.status }
+func (u *Usuario) Status() StatusConta              { return u.status }
 
 func (u *Usuario) EstaAtiva() bool {
 	return u.status == StatusContaAtiva

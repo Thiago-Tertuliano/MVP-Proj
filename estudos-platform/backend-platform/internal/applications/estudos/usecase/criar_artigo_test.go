@@ -8,16 +8,19 @@ import (
 	"github.com/google/uuid"
 	"github.com/thiago-tertuliano/estudos-platform/internal/applications/estudos/dto"
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/estudos/entity"
+	"github.com/thiago-tertuliano/estudos-platform/internal/domain/estudos/repository"
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/estudos/valueobject"
 	domainErros "github.com/thiago-tertuliano/estudos-platform/internal/domain/shared/errors"
 )
 
 type MockArtigoRepository struct {
-	SaveFn           func(ctx context.Context, a *entity.Artigo) error
-	FindByIDFn       func(ctx context.Context, id string) (*entity.Artigo, error)
-	FindBySlugFn     func(ctx context.Context, slug valueobject.Slug) (*entity.Artigo, error)
-	ListPublicadosFn func(ctx context.Context, limit, offset int) ([]*entity.Artigo, error)
-	SlugExisteFn     func(ctx context.Context, slug valueobject.Slug) (bool, error)
+	SaveFn               func(ctx context.Context, a *entity.Artigo) error
+	FindByIDFn           func(ctx context.Context, id string) (*entity.Artigo, error)
+	FindBySlugFn         func(ctx context.Context, slug valueobject.Slug) (*entity.Artigo, error)
+	ListPublicadosFn     func(ctx context.Context, limit, offset int) ([]*entity.Artigo, error)
+	SlugExisteFn         func(ctx context.Context, slug valueobject.Slug) (bool, error)
+	AtualizarEmbeddingFn func(ctx context.Context, id string, embedding []float32) error
+	BuscarPublicadosFn   func(ctx context.Context, q string, limit int) ([]repository.ResultadoBusca, error)
 }
 
 func (m *MockArtigoRepository) Save(ctx context.Context, a *entity.Artigo) error {
@@ -34,6 +37,18 @@ func (m *MockArtigoRepository) ListPublicados(ctx context.Context, limit, offset
 }
 func (m *MockArtigoRepository) SlugExiste(ctx context.Context, slug valueobject.Slug) (bool, error) {
 	return m.SlugExisteFn(ctx, slug)
+}
+func (m *MockArtigoRepository) AtualizarEmbedding(ctx context.Context, id string, embedding []float32) error {
+	if m.AtualizarEmbeddingFn != nil {
+		return m.AtualizarEmbeddingFn(ctx, id, embedding)
+	}
+	return nil
+}
+func (m *MockArtigoRepository) BuscarPublicados(ctx context.Context, q string, limit int) ([]repository.ResultadoBusca, error) {
+	if m.BuscarPublicadosFn != nil {
+		return m.BuscarPublicadosFn(ctx, q, limit)
+	}
+	return nil, nil
 }
 
 func TestCriarArtigo_Sucesso(t *testing.T) {
@@ -81,7 +96,7 @@ func TestPublicarArtigo_Sucesso(t *testing.T) {
 		FindByIDFn: func(ctx context.Context, id string) (*entity.Artigo, error) { return artigo, nil },
 		SaveFn:     func(ctx context.Context, a *entity.Artigo) error { return nil },
 	}
-	uc := NewPublicarArtigo(repo)
+	uc := NewPublicarArtigo(repo, nil)
 	resp, err := uc.Execute(context.Background(), artigo.ID().String(), autor.String())
 	if err != nil {
 		t.Fatal(err)
