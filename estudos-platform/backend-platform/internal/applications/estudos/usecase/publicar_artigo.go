@@ -6,16 +6,18 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/thiago-tertuliano/estudos-platform/internal/applications/estudos/dto"
+	"github.com/thiago-tertuliano/estudos-platform/internal/applications/estudos/port"
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/estudos/repository"
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/shared/errors"
 )
 
 type PublicarArtigo struct {
-	repo repository.ArtigoRepository
+	repo  repository.ArtigoRepository
+	embed port.EmbeddingGerador
 }
 
-func NewPublicarArtigo(repo repository.ArtigoRepository) *PublicarArtigo {
-	return &PublicarArtigo{repo: repo}
+func NewPublicarArtigo(repo repository.ArtigoRepository, embed port.EmbeddingGerador) *PublicarArtigo {
+	return &PublicarArtigo{repo: repo, embed: embed}
 }
 
 func (uc *PublicarArtigo) Execute(ctx context.Context, id, autorID string) (*dto.ArtigoResponse, error) {
@@ -40,6 +42,12 @@ func (uc *PublicarArtigo) Execute(ctx context.Context, id, autorID string) (*dto
 	}
 	if err := uc.repo.Save(ctx, artigo); err != nil {
 		return nil, errors.ErrInternal("falha ao publicar artigo", "PublicarArtigo.Execute", err)
+	}
+	if uc.embed != nil {
+		vec, embErr := uc.embed.Gerar(ctx, artigo.Titulo()+" "+string(artigo.Conteudo()))
+		if embErr == nil && len(vec) > 0 {
+			_ = uc.repo.AtualizarEmbedding(ctx, artigo.ID().String(), vec) // embedding é best-effort
+		}
 	}
 	return toArtigoResponse(artigo), nil
 }

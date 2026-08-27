@@ -2,6 +2,7 @@ package router
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -34,6 +35,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 
 	hasher := external.NewBcryptHasher(10)
 	tokens := external.NewJWTService(cfg.JWTSecret)
+	embed := external.StubEmbedding{}
 
 	tokenCfg := usecase.TokenConfig{
 		AccessTTLMin:  cfg.JWTAccessTTLMin,
@@ -51,7 +53,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	obterArtigoUC := usecase.NewObterArtigo(artigoRepo)
 	listarArtigosUC := usecase.NewListarArtigos(artigoRepo)
 	atualizarArtigoUC := usecase.NewAtualizarArtigo(artigoRepo)
-	publicarArtigoUC := usecase.NewPublicarArtigo(artigoRepo)
+	publicarArtigoUC := usecase.NewPublicarArtigo(artigoRepo, embed)
 
 	criarTrilhaUC := usecase.NewCriarTrilha(trilhaRepo)
 	obterTrilhaUC := usecase.NewObterTrilha(trilhaRepo)
@@ -59,21 +61,33 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	adicionarModuloUC := usecase.NewAdicionarModulo(trilhaRepo)
 	publicarTrilhaUC := usecase.NewPublicarTrilha(trilhaRepo)
 	marcarLidoUC := usecase.NewMarcarArtigoLido(artigoRepo, progressoRepo)
+	progressoTrilhaUC := usecase.NewObterProgressoTrilha(progressoRepo)
+	buscarUC := usecase.NewBuscarArtigos(artigoRepo)
 
-	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC, logoutUC)
+	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC, logoutUC, handler.AuthCookies{
+		AccessMaxAge:  cfg.JWTAccessTTLMin * 60,
+		RefreshMaxAge: cfg.JWTRefreshTTLHours * 3600,
+		Secure:        cfg.AppEnv == "production",
+	})
 	artigos := handler.NewArtigoHandler(criarArtigoUC, obterArtigoUC, listarArtigosUC, atualizarArtigoUC, publicarArtigoUC)
 	trilhas := handler.NewTrilhaHandler(criarTrilhaUC, obterTrilhaUC, listarTrilhasUC, adicionarModuloUC, publicarTrilhaUC)
-	progresso := handler.NewProgressoHandler(marcarLidoUC)
+	progresso := handler.NewProgressoHandler(marcarLidoUC, progressoTrilhaUC)
+	busca := handler.NewBuscaHandler(buscarUC)
 
 	r.Route("/api/v1", func(api chi.Router) {
-		api.Post("/auth/registrar", auth.Registrar)
-		api.Post("/auth/login", auth.Login)
-		api.Post("/auth/refresh", auth.Refresh)
+		limiteAuth := middleware.NewRateLimit(10, time.Minute)
+		api.Group(func(pub chi.Router) {
+			pub.Use(limiteAuth.Handler)
+			pub.Post("/auth/registrar", auth.Registrar)
+			pub.Post("/auth/login", auth.Login)
+			pub.Post("/auth/refresh", auth.Refresh)
+		})
 
 		api.Get("/artigos", artigos.Listar)
 		api.Get("/artigos/{slug}", artigos.Obter)
 		api.Get("/trilhas", trilhas.Listar)
 		api.Get("/trilhas/{slug}", trilhas.Obter)
+		api.Get("/busca", busca.Buscar)
 
 		api.Group(func(pr chi.Router) {
 			pr.Use(middleware.NewAutenticador(tokens).Proteger)
@@ -86,6 +100,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 			pr.Post("/trilhas/{id}/modulos", trilhas.AdicionarModulo)
 			pr.Post("/trilhas/{id}/publicar", trilhas.Publicar)
 			pr.Put("/progresso/artigos/{id}", progresso.MarcarArtigo)
+			pr.Get("/progresso/trilhas/{id}", progresso.ObterTrilha)
 		})
 	})
 

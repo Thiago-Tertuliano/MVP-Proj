@@ -43,6 +43,15 @@ func (uc *CriarArtigo) Execute(ctx context.Context, req dto.CriarArtigoRequest, 
 		return nil, errors.ErrAlreadyExists("slug já utilizado", "CriarArtigo.Execute", nil)
 	}
 
+	trilhaID, err := parseOptionalUUID(req.TrilhaID, "CriarArtigo.Execute")
+	if err != nil {
+		return nil, err
+	}
+	moduloID, err := parseOptionalUUID(req.ModuloID, "CriarArtigo.Execute")
+	if err != nil {
+		return nil, err
+	}
+
 	artigo, err := entity.NovoArtigo(entity.NovoArtigoInput{
 		Titulo:    req.Titulo,
 		Subtitulo: req.Subtitulo,
@@ -51,6 +60,8 @@ func (uc *CriarArtigo) Execute(ctx context.Context, req dto.CriarArtigoRequest, 
 		Metadados: req.Metadados,
 		Slug:      slug,
 		AutorID:   autorUUID,
+		TrilhaID:  trilhaID,
+		ModuloID:  moduloID,
 	})
 	if err != nil {
 		return nil, err

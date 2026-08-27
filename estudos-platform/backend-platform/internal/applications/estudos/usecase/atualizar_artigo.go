@@ -39,6 +39,19 @@ func (uc *AtualizarArtigo) Execute(ctx context.Context, id string, autorID strin
 	if err := artigo.AtualizarConteudo(req.Titulo, req.Subtitulo, req.CapaURL, req.Conteudo, req.Metadados); err != nil {
 		return nil, err
 	}
+	trilhaID, err := parseOptionalUUID(req.TrilhaID, "AtualizarArtigo.Execute")
+	if err != nil {
+		return nil, err
+	}
+	moduloID, err := parseOptionalUUID(req.ModuloID, "AtualizarArtigo.Execute")
+	if err != nil {
+		return nil, err
+	}
+	if req.TrilhaID != nil || req.ModuloID != nil {
+		if err := artigo.VincularTrilhaEModulo(trilhaID, moduloID); err != nil {
+			return nil, err
+		}
+	}
 	if err := uc.repo.Save(ctx, artigo); err != nil {
 		return nil, errors.ErrInternal("falha ao atualizar artigo", "AtualizarArtigo.Execute", err)
 	}

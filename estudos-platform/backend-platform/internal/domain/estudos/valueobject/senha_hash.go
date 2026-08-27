@@ -8,5 +8,5 @@ type SenhaHash struct {
 
 func NovoHashSenha(value string) SenhaHash { return SenhaHash{value: value} }
 
-func (s SenhaHash) Value() string  { return s.value }
-func (s SenhaHash) IsZero() bool   { return s.value == "" }
+func (s SenhaHash) Value() string { return s.value }
+func (s SenhaHash) IsZero() bool  { return s.value == "" }

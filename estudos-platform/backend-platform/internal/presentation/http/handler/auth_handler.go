@@ -42,6 +42,7 @@ type AuthHandler struct {
 	perfil    ObterPerfilUseCase
 	logout    LogoutUseCase
 	validate  *validator.Validate
+	cookies   AuthCookies
 }
 
 func NewAuthHandler(
@@ -50,6 +51,7 @@ func NewAuthHandler(
 	refresh RefreshUseCase,
 	perfil ObterPerfilUseCase,
 	logout LogoutUseCase,
+	cookies AuthCookies,
 ) *AuthHandler {
 	return &AuthHandler{
 		registrar: registrar,
@@ -58,6 +60,7 @@ func NewAuthHandler(
 		perfil:    perfil,
 		logout:    logout,
 		validate:  validator.New(),
+		cookies:   cookies.withDefaults(),
 	}
 }
 
@@ -71,6 +74,7 @@ func (h *AuthHandler) Registrar(w http.ResponseWriter, r *http.Request) {
 		h.escreverErro(w, err)
 		return
 	}
+	h.cookies.gravar(w, resp.Tokens.AccessToken, resp.Tokens.RefreshToken)
 	h.escreverJSON(w, http.StatusCreated, resp)
 }
 
@@ -84,19 +88,31 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		h.escreverErro(w, err)
 		return
 	}
+	h.cookies.gravar(w, resp.Tokens.AccessToken, resp.Tokens.RefreshToken)
 	h.escreverJSON(w, http.StatusOK, resp)
 }
 
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	var req dto.RefreshRequest
-	if !h.decodificarValidar(w, r, &req) {
+	if r.ContentLength != 0 {
+		if !h.decodificarValidar(w, r, &req) {
+			return
+		}
+	}
+	token := req.RefreshToken
+	if token == "" {
+		token = cookieValue(r, cookieRefresh)
+	}
+	if token == "" {
+		h.escreverJSON(w, http.StatusBadRequest, map[string]string{"erro": "refresh_token obrigatório"})
 		return
 	}
-	resp, err := h.refresh.Execute(r.Context(), req.RefreshToken)
+	resp, err := h.refresh.Execute(r.Context(), token)
 	if err != nil {
 		h.escreverErro(w, err)
 		return
 	}
+	h.cookies.gravar(w, resp.Tokens.AccessToken, resp.Tokens.RefreshToken)
 	h.escreverJSON(w, http.StatusOK, resp)
 }
 
@@ -119,6 +135,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		h.escreverErro(w, err)
 		return
 	}
+	h.cookies.limpar(w)
 	h.escreverJSON(w, http.StatusOK, map[string]string{"mensagem": "logout efetuado"})
 }
 

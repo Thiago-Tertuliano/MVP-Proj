@@ -4,15 +4,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/estudos/valueobject"
 	domainErros "github.com/thiago-tertuliano/estudos-platform/internal/domain/shared/errors"
-	"github.com/google/uuid"
 )
 
 func uuidFromString(t *testing.T, s string) uuid.UUID {
 	t.Helper()
 	id, err := uuid.Parse(s)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	return id
 }
 

@@ -40,11 +40,21 @@ func (r *ProgressoRepoPG) UpsertArtigo(ctx context.Context, p domrepo.ProgressoA
 }
 
 func (r *ProgressoRepoPG) CountConcluidosNaTrilha(ctx context.Context, usuarioID, trilhaID string) (int, int, error) {
-	return 0, 0, domainErros.ErrInvalidState(
-		"progresso da trilha depende de artigos.trilha_id (A1)",
-		"progresso_repo_pg.CountConcluidosNaTrilha",
-		nil,
-	)
+	var concluidos, total int
+	err := r.pool.QueryRow(ctx, `
+		SELECT
+			COUNT(*) FILTER (WHERE p.concluido),
+			COUNT(*)
+		FROM artigos a
+		LEFT JOIN progresso_estudo p
+		  ON p.artigo_id = a.id AND p.usuario_id = $1
+		WHERE a.trilha_id = $2
+		  AND a.status = 'publicado'
+	`, usuarioID, trilhaID).Scan(&concluidos, &total)
+	if err != nil {
+		return 0, 0, MapPG(err, "progresso_repo_pg.CountConcluidosNaTrilha")
+	}
+	return concluidos, total, nil
 }
 
 func boolToPercent(ok bool) int {

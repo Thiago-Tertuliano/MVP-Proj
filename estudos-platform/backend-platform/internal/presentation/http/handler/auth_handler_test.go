@@ -81,7 +81,7 @@ func newAuthHandler(
 	if logout == nil {
 		logout = &fakeLogout{}
 	}
-	return NewAuthHandler(reg, login, refresh, perfil, logout)
+	return NewAuthHandler(reg, login, refresh, perfil, logout, AuthCookies{})
 }
 
 func authResponseFake() *dto.AuthResponse {
@@ -149,6 +149,26 @@ func TestLogin_Sucesso(t *testing.T) {
 	}
 	if resp.Tokens.AccessToken != "access" {
 		t.Error("access token ausente na resposta")
+	}
+}
+
+func TestLogin_GravaCookiesHttpOnly(t *testing.T) {
+	h := newAuthHandler(nil, &fakeLogin{resp: authResponseFake()}, nil, nil, nil)
+	w := executarHandler(h.Login, http.MethodPost, "/auth/login", `{"email":"t@ex.com","senha":"senha123"}`, nil)
+	if w.Code != http.StatusOK {
+		t.Fatalf("esperava 200, got %d", w.Code)
+	}
+	foundAccess, foundRefresh := false, false
+	for _, c := range w.Result().Cookies() {
+		if c.Name == cookieAccess && c.HttpOnly && c.Value == "access" {
+			foundAccess = true
+		}
+		if c.Name == cookieRefresh && c.HttpOnly && c.Value == "refresh" {
+			foundRefresh = true
+		}
+	}
+	if !foundAccess || !foundRefresh {
+		t.Fatalf("cookies HttpOnly ausentes: %v", w.Result().Cookies())
 	}
 }
 
