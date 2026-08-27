@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/estudos/entity"
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/estudos/valueobject"
 )
@@ -18,6 +19,7 @@ type ArtigoRepository interface {
 	FindByID(ctx context.Context, id string) (*entity.Artigo, error)
 	FindBySlug(ctx context.Context, slug valueobject.Slug) (*entity.Artigo, error)
 	ListPublicados(ctx context.Context, limit, offset int) ([]*entity.Artigo, error)
+	ListarPorTrilha(ctx context.Context, trilhaID uuid.UUID) ([]*entity.Artigo, error) // Adicionado Sprint A2
 	SlugExiste(ctx context.Context, slug valueobject.Slug) (bool, error)
 	AtualizarEmbedding(ctx context.Context, id string, embedding []float32) error
 	BuscarPublicados(ctx context.Context, q string, limit int) ([]ResultadoBusca, error)

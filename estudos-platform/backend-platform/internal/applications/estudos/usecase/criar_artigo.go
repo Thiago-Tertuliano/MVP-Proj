@@ -13,17 +13,67 @@ import (
 )
 
 type CriarArtigo struct {
-	repo repository.ArtigoRepository
+	repo       repository.ArtigoRepository
+	trilhaRepo repository.TrilhaRepository
 }
 
-func NewCriarArtigo(repo repository.ArtigoRepository) *CriarArtigo {
-	return &CriarArtigo{repo: repo}
+func NewCriarArtigo(repo repository.ArtigoRepository, trilhaRepo repository.TrilhaRepository) *CriarArtigo {
+	return &CriarArtigo{
+		repo:       repo,
+		trilhaRepo: trilhaRepo,
+	}
 }
 
 func (uc *CriarArtigo) Execute(ctx context.Context, req dto.CriarArtigoRequest, autorID string) (*dto.ArtigoResponse, error) {
 	autorUUID, err := uuid.Parse(autorID)
 	if err != nil {
 		return nil, errors.ErrInvalidArgument("autor_id inválido", "CriarArtigo.Execute", err)
+	}
+
+	var trilhaUUID *uuid.UUID
+	if req.TrilhaID != nil {
+		parsed, err := uuid.Parse(*req.TrilhaID)
+		if err != nil {
+			return nil, errors.ErrInvalidArgument("trilha_id inválido", "CriarArtigo.Execute", err)
+		}
+		trilhaUUID = &parsed
+	}
+
+	var moduloUUID *uuid.UUID
+	if req.ModuloID != nil {
+		parsed, err := uuid.Parse(*req.ModuloID)
+		if err != nil {
+			return nil, errors.ErrInvalidArgument("modulo_id inválido", "CriarArtigo.Execute", err)
+		}
+		moduloUUID = &parsed
+	}
+
+	if moduloUUID != nil {
+		if trilhaUUID == nil {
+			return nil, errors.ErrInvalidArgument("trilha_id é obrigatório quando modulo_id é informado", "CriarArtigo.Execute", nil)
+		}
+
+		trilha, err := uc.trilhaRepo.FindByID(ctx, trilhaUUID.String())
+		if err != nil {
+			return nil, errors.ErrNotFound("trilha especificada não encontrada", "CriarArtigo.Execute", err)
+		}
+
+		moduloExiste := false
+		for _, mod := range trilha.Modulos() {
+			if mod.ID() == *moduloUUID {
+				moduloExiste = true
+				break
+			}
+		}
+
+		if !moduloExiste {
+			return nil, errors.ErrInvalidArgument("o módulo informado não pertence à trilha selecionada", "CriarArtigo.Execute", nil)
+		}
+	} else if trilhaUUID != nil {
+		_, err := uc.trilhaRepo.FindByID(ctx, trilhaUUID.String())
+		if err != nil {
+			return nil, errors.ErrNotFound("trilha especificada não encontrada", "CriarArtigo.Execute", err)
+		}
 	}
 
 	slugRaw := req.Slug
@@ -43,15 +93,6 @@ func (uc *CriarArtigo) Execute(ctx context.Context, req dto.CriarArtigoRequest, 
 		return nil, errors.ErrAlreadyExists("slug já utilizado", "CriarArtigo.Execute", nil)
 	}
 
-	trilhaID, err := parseOptionalUUID(req.TrilhaID, "CriarArtigo.Execute")
-	if err != nil {
-		return nil, err
-	}
-	moduloID, err := parseOptionalUUID(req.ModuloID, "CriarArtigo.Execute")
-	if err != nil {
-		return nil, err
-	}
-
 	artigo, err := entity.NovoArtigo(entity.NovoArtigoInput{
 		Titulo:    req.Titulo,
 		Subtitulo: req.Subtitulo,
@@ -60,8 +101,8 @@ func (uc *CriarArtigo) Execute(ctx context.Context, req dto.CriarArtigoRequest, 
 		Metadados: req.Metadados,
 		Slug:      slug,
 		AutorID:   autorUUID,
-		TrilhaID:  trilhaID,
-		ModuloID:  moduloID,
+		TrilhaID:  trilhaUUID,
+		ModuloID:  moduloUUID,
 	})
 	if err != nil {
 		return nil, err
@@ -75,5 +116,5 @@ func (uc *CriarArtigo) Execute(ctx context.Context, req dto.CriarArtigoRequest, 
 		return nil, errors.ErrInternal("falha ao salvar artigo", "CriarArtigo.Execute", err)
 	}
 
-	return toArtigoResponse(artigo), nil
+	return toArtigoResponse(artigo), nil // Assumindo que toArtigoResponse existe no mesmo package
 }

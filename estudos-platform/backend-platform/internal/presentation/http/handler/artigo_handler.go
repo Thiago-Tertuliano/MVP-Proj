@@ -26,6 +26,10 @@ type ListarArtigosUseCase interface {
 	Execute(ctx context.Context, limit, offset int) (*dto.ListarArtigosResponse, error)
 }
 
+type ListarPorTrilhaUseCase interface {
+	Execute(ctx context.Context, slug string) (*dto.ListarArtigosResponse, error)
+}
+
 type AtualizarArtigoUseCase interface {
 	Execute(ctx context.Context, id, autorID string, req dto.AtualizarArtigoRequest) (*dto.ArtigoResponse, error)
 }
@@ -35,25 +39,31 @@ type PublicarArtigoUseCase interface {
 }
 
 type ArtigoHandler struct {
-	criar     CriarArtigoUseCase
-	obter     ObterArtigoUseCase
-	listar    ListarArtigosUseCase
-	atualizar AtualizarArtigoUseCase
-	publicar  PublicarArtigoUseCase
-	validate  *validator.Validate
+	criar           CriarArtigoUseCase
+	obter           ObterArtigoUseCase
+	listar          ListarArtigosUseCase
+	listarPorTrilha ListarPorTrilhaUseCase
+	atualizar       AtualizarArtigoUseCase
+	publicar        PublicarArtigoUseCase
+	validate        *validator.Validate
 }
 
 func NewArtigoHandler(
 	criar CriarArtigoUseCase,
 	obter ObterArtigoUseCase,
 	listar ListarArtigosUseCase,
+	listarPorTrilha ListarPorTrilhaUseCase,
 	atualizar AtualizarArtigoUseCase,
 	publicar PublicarArtigoUseCase,
 ) *ArtigoHandler {
 	return &ArtigoHandler{
-		criar: criar, obter: obter, listar: listar,
-		atualizar: atualizar, publicar: publicar,
-		validate: validator.New(),
+		criar:           criar,
+		obter:           obter,
+		listar:          listar,
+		listarPorTrilha: listarPorTrilha,
+		atualizar:       atualizar,
+		publicar:        publicar,
+		validate:        validator.New(),
 	}
 }
 
@@ -85,6 +95,16 @@ func (h *ArtigoHandler) Listar(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
 	resp, err := h.listar.Execute(r.Context(), limit, offset)
+	if err != nil {
+		h.escreverErro(w, err)
+		return
+	}
+	h.escreverJSON(w, http.StatusOK, resp)
+}
+
+func (h *ArtigoHandler) ListarPorTrilha(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+	resp, err := h.listarPorTrilha.Execute(r.Context(), slug)
 	if err != nil {
 		h.escreverErro(w, err)
 		return

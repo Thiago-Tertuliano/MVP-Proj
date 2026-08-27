@@ -10,7 +10,6 @@ import (
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/shared/kernel"
 )
 
-// Artigo é o Aggregate Root de conteúdo.
 type Artigo struct {
 	kernel.BaseEntity
 	slug        valueobject.Slug
@@ -22,8 +21,8 @@ type Artigo struct {
 	autorID     uuid.UUID
 	status      valueobject.ArtigoStatus
 	publicadoEm *time.Time
-	trilhaID    *uuid.UUID // Adcionado (Sprint A1)
-	moduloID    *uuid.UUID // Adcionado (Sprint A1)
+	trilhaID    *uuid.UUID
+	moduloID    *uuid.UUID
 }
 
 type NovoArtigoInput struct {
@@ -34,8 +33,8 @@ type NovoArtigoInput struct {
 	Metadados json.RawMessage
 	Slug      valueobject.Slug
 	AutorID   uuid.UUID
-	TrilhaID  *uuid.UUID // Adcionado (Sprint A1)
-	ModuloID  *uuid.UUID // Adcionado (Sprint A1)
+	TrilhaID  *uuid.UUID
+	ModuloID  *uuid.UUID
 }
 
 func NovoArtigo(in NovoArtigoInput) (*Artigo, error) {
@@ -57,23 +56,23 @@ func NovoArtigo(in NovoArtigoInput) (*Artigo, error) {
 	if in.AutorID == uuid.Nil {
 		return nil, errors.ErrInvalidArgument("autor_id obrigatório", "entity.NovoArtigo", nil)
 	}
-
+	
 	if in.ModuloID != nil && in.TrilhaID == nil {
-		return nil, errors.ErrInvalidArgument("módulo órfão sem trilha", "entity.NovoArtigo", nil)
+		return nil, errors.ErrInvalidArgument("trilha_id é obrigatório quando modulo_id é informado", "entity.NovoArtigo", nil)
 	}
 
 	return &Artigo{
-		BaseEntity: kernel.NewBaseEntity(),
-		slug:       in.Slug,
-		titulo:     in.Titulo,
-		subtitulo:  in.Subtitulo,
-		capaURL:    in.CapaURL,
-		conteudo:   in.Conteudo,
-		metadados:  in.Metadados,
-		autorID:    in.AutorID,
-		status:     valueobject.ArtigoStatusRascunho,
-		trilhaID:   in.TrilhaID,
-		moduloID:   in.ModuloID,
+		BaseEntity:  kernel.NewBaseEntity(),
+		slug:        in.Slug,
+		titulo:      in.Titulo,
+		subtitulo:   in.Subtitulo,
+		capaURL:     in.CapaURL,
+		conteudo:    in.Conteudo,
+		metadados:   in.Metadados,
+		autorID:     in.AutorID,
+		status:      valueobject.ArtigoStatusRascunho,
+		trilhaID:    in.TrilhaID,
+		moduloID:    in.ModuloID,
 	}, nil
 }
 
@@ -86,7 +85,7 @@ func ReconstruirArtigo(
 	status valueobject.ArtigoStatus,
 	publicadoEm *time.Time,
 	createdAt, updatedAt time.Time,
-	trilhaID, moduloID *uuid.UUID, // Adicionado (Sprint A1)
+	trilhaID, moduloID *uuid.UUID,
 ) *Artigo {
 	return &Artigo{
 		BaseEntity:  kernel.NewBaseEntityWithID(id, createdAt, updatedAt),
@@ -99,22 +98,22 @@ func ReconstruirArtigo(
 		autorID:     autorID,
 		status:      status,
 		publicadoEm: publicadoEm,
-		trilhaID:    trilhaID, // Adicionado (Sprint A1)
-		moduloID:    moduloID, // Adicionado (Sprint A1)
+		trilhaID:    trilhaID,
+		moduloID:    moduloID,
 	}
 }
 
-func (a *Artigo) Slug() valueobject.Slug           { return a.slug }
-func (a *Artigo) Titulo() string                   { return a.titulo }
-func (a *Artigo) Subtitulo() string                { return a.subtitulo }
-func (a *Artigo) CapaURL() string                  { return a.capaURL }
-func (a *Artigo) Conteudo() json.RawMessage        { return a.conteudo }
-func (a *Artigo) Metadados() json.RawMessage       { return a.metadados }
-func (a *Artigo) AutorID() uuid.UUID               { return a.autorID }
-func (a *Artigo) Status() valueobject.ArtigoStatus { return a.status }
-func (a *Artigo) PublicadoEm() *time.Time          { return a.publicadoEm }
-func (a *Artigo) TrilhaID() *uuid.UUID             { return a.trilhaID } // Adicionado (Sprint A1)
-func (a *Artigo) ModuloID() *uuid.UUID             { return a.moduloID } // Adicionado (Sprint A1)
+func (a *Artigo) Slug() valueobject.Slug              { return a.slug }
+func (a *Artigo) Titulo() string                      { return a.titulo }
+func (a *Artigo) Subtitulo() string                   { return a.subtitulo }
+func (a *Artigo) CapaURL() string                     { return a.capaURL }
+func (a *Artigo) Conteudo() json.RawMessage           { return a.conteudo }
+func (a *Artigo) Metadados() json.RawMessage          { return a.metadados }
+func (a *Artigo) AutorID() uuid.UUID                  { return a.autorID }
+func (a *Artigo) Status() valueobject.ArtigoStatus    { return a.status }
+func (a *Artigo) PublicadoEm() *time.Time             { return a.publicadoEm }
+func (a *Artigo) TrilhaID() *uuid.UUID                { return a.trilhaID }
+func (a *Artigo) ModuloID() *uuid.UUID                { return a.moduloID }
 
 func (a *Artigo) AtualizarConteudo(titulo, subtitulo, capaURL string, conteudo, metadados json.RawMessage) error {
 	if a.status == valueobject.ArtigoStatusArquivado {
@@ -146,7 +145,7 @@ func (a *Artigo) AtualizarConteudo(titulo, subtitulo, capaURL string, conteudo, 
 
 func (a *Artigo) VincularTrilhaEModulo(trilhaID, moduloID *uuid.UUID) error {
 	if moduloID != nil && trilhaID == nil {
-		return errors.ErrInvalidArgument("módulo órfão sem trilha", "Artigo.VincularTrilhaEModulo", nil)
+		return errors.ErrInvalidArgument("trilha_id é obrigatório quando modulo_id é informado", "Artigo.VincularTrilhaEModulo", nil)
 	}
 	a.trilhaID = trilhaID
 	a.moduloID = moduloID

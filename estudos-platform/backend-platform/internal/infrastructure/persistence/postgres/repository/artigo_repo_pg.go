@@ -98,6 +98,30 @@ func (r *ArtigoRepoPG) ListPublicados(ctx context.Context, limit, offset int) ([
 	return out, rows.Err()
 }
 
+func (r *ArtigoRepoPG) ListarPorTrilha(ctx context.Context, trilhaID uuid.UUID) ([]*entity.Artigo, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT id, slug, titulo, subtitulo, capa_url, conteudo, metadados,
+		       autor_id, status, publicado_em, created_at, updated_at, trilha_id, modulo_id
+		FROM artigos 
+		WHERE trilha_id = $1
+		ORDER BY created_at ASC
+	`, trilhaID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var out []*entity.Artigo
+	for rows.Next() {
+		a, err := scanArtigo(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, a)
+	}
+	return out, rows.Err()
+}
+
 func (r *ArtigoRepoPG) SlugExiste(ctx context.Context, slug valueobject.Slug) (bool, error) {
 	var existe bool
 	err := r.pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM artigos WHERE slug = $1)`, slug.Value()).Scan(&existe)
@@ -111,7 +135,7 @@ func (r *ArtigoRepoPG) AtualizarEmbedding(ctx context.Context, id string, embedd
 	_, err := r.pool.Exec(ctx, `
 		UPDATE artigos SET embedding = $2::vector, updated_at = now() WHERE id = $1
 	`, id, float32VectorLiteral(embedding))
-	return MapPG(err, "artigo_repo_pg.AtualizarEmbedding")
+	return MapPG(err, "artigo_repo_pg.AtualizarEmbedding") // Assumindo que MapPG está definido neste ou em outro arquivo do pacote
 }
 
 func (r *ArtigoRepoPG) BuscarPublicados(ctx context.Context, q string, limit int) ([]domrepo.ResultadoBusca, error) {
@@ -190,7 +214,6 @@ func scanArtigo(row scannable) (*entity.Artigo, error) {
 	if err != nil {
 		return nil, err
 	}
-	var trilhaID, moduloID *uuid.UUID // Adicionado (Sprint A1)
 	
 	return entity.ReconstruirArtigo(
 		id,
