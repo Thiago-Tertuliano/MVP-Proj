@@ -7,8 +7,8 @@ type CriarArtigoRequest struct {
 	Subtitulo string          `json:"subtitulo" validate:"omitempty,max=500"`
 	CapaURL   string          `json:"capa_url" validate:"omitempty,url"`
 	Slug      string          `json:"slug" validate:"omitempty,min=2,max=200"`
-	TrilhaID  *string         `json:"trilha_id"` // Adcionado (Sprint A1)
-	ModuloID  *string         `json:"modulo_id"` // Adcionado (Sprint A1)
+	TrilhaID  *string         `json:"trilha_id"`
+	ModuloID  *string         `json:"modulo_id"`
 	Conteudo  json.RawMessage `json:"conteudo"`
 	Metadados json.RawMessage `json:"metadados"`
 }
@@ -17,8 +17,8 @@ type AtualizarArtigoRequest struct {
 	Titulo    string          `json:"titulo" validate:"required,min=3,max=300"`
 	Subtitulo string          `json:"subtitulo" validate:"omitempty,max=500"`
 	CapaURL   string          `json:"capa_url" validate:"omitempty,url"`
-	TrilhaID  *string         `json:"trilha_id"` // Adcionado (Sprint A1)
-	ModuloID  *string         `json:"modulo_id"` // Adcionado (Sprint A1)
+	TrilhaID  *string         `json:"trilha_id"`
+	ModuloID  *string         `json:"modulo_id"`
 	Conteudo  json.RawMessage `json:"conteudo"`
 	Metadados json.RawMessage `json:"metadados"`
 }
@@ -28,9 +28,9 @@ type ArtigoResponse struct {
 	Slug        string          `json:"slug"`
 	Titulo      string          `json:"titulo"`
 	Subtitulo   string          `json:"subtitulo,omitempty"`
-	TrilhaID    *string         `json:"trilha_id"` // Adcionado (Sprint A1)
-	ModuloID    *string         `json:"modulo_id"` // Adcionado (Sprint A1)
 	CapaURL     string          `json:"capa_url,omitempty"`
+	TrilhaID    *string         `json:"trilha_id"`
+	ModuloID    *string         `json:"modulo_id"`
 	Conteudo    json.RawMessage `json:"conteudo"`
 	Metadados   json.RawMessage `json:"metadados"`
 	AutorID     string          `json:"autor_id"`

@@ -14,7 +14,6 @@ import (
 	"github.com/thiago-tertuliano/estudos-platform/internal/presentation/http/middleware"
 )
 
-// New monta o router e o grafo de dependências (composição root).
 func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	r := chi.NewRouter()
 
@@ -49,9 +48,10 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	perfilUC := usecase.NewObterPerfil(usuarioRepo)
 	logoutUC := usecase.NewLogoutUsuario(refreshRepo)
 
-	criarArtigoUC := usecase.NewCriarArtigo(artigoRepo)
+	criarArtigoUC := usecase.NewCriarArtigo(artigoRepo, trilhaRepo)
 	obterArtigoUC := usecase.NewObterArtigo(artigoRepo)
 	listarArtigosUC := usecase.NewListarArtigos(artigoRepo)
+	listarPorTrilhaUC := usecase.NewListarArtigosPorTrilha(artigoRepo, trilhaRepo)
 	atualizarArtigoUC := usecase.NewAtualizarArtigo(artigoRepo)
 	publicarArtigoUC := usecase.NewPublicarArtigo(artigoRepo, embed)
 
@@ -69,8 +69,8 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 		RefreshMaxAge: cfg.JWTRefreshTTLHours * 3600,
 		Secure:        cfg.AppEnv == "production",
 	})
-	artigos := handler.NewArtigoHandler(criarArtigoUC, obterArtigoUC, listarArtigosUC, atualizarArtigoUC, publicarArtigoUC)
-	trilhas := handler.NewTrilhaHandler(criarTrilhaUC, obterTrilhaUC, listarTrilhasUC, adicionarModuloUC, publicarTrilhaUC)
+	artigos := handler.NewArtigoHandler(criarArtigoUC, obterArtigoUC, listarArtigosUC, listarPorTrilhaUC,  atualizarArtigoUC, publicarArtigoUC)
+	trilhas := handler.NewTrilhaHandler(criarTrilhaUC, obterTrilhaUC, listarTrilhasUC, adicionarModuloUC, publicarTrilhaUC, )
 	progresso := handler.NewProgressoHandler(marcarLidoUC, progressoTrilhaUC)
 	busca := handler.NewBuscaHandler(buscarUC)
 
@@ -87,6 +87,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 		api.Get("/artigos/{slug}", artigos.Obter)
 		api.Get("/trilhas", trilhas.Listar)
 		api.Get("/trilhas/{slug}", trilhas.Obter)
+		api.Get("/trilhas/{slug}/artigos", artigos.ListarPorTrilha)
 		api.Get("/busca", busca.Buscar)
 
 		api.Group(func(pr chi.Router) {

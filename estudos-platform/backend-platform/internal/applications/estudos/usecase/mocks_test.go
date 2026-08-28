@@ -74,3 +74,59 @@ func (m *MockTokenGerador) Gerar(c port.Claims, accessTTL, refreshTTL time.Durat
 func (m *MockTokenGerador) ValidarAccessToken(token string) (*port.Claims, error) {
 	return m.ValidarAccessTokenFn(token)
 }
+
+// ---- MockArtigoRepository (Atualizado com a interface) ----
+type MockArtigoRepository struct {
+	repository.ArtigoRepository // O Go preenche os métodos faltantes magicamente
+
+	SaveFn               func(ctx context.Context, a *entity.Artigo) error
+	FindByIDFn           func(ctx context.Context, id string) (*entity.Artigo, error)
+	FindBySlugFn         func(ctx context.Context, slug valueobject.Slug) (*entity.Artigo, error)
+	ListPublicadosFn     func(ctx context.Context, limit, offset int) ([]*entity.Artigo, error)
+	SlugExisteFn         func(ctx context.Context, slug valueobject.Slug) (bool, error)
+	AtualizarEmbeddingFn func(ctx context.Context, id string, embedding []float32) error
+	BuscarPublicadosFn   func(ctx context.Context, q string, limit int) ([]repository.ResultadoBusca, error)
+}
+
+func (m *MockArtigoRepository) Save(ctx context.Context, a *entity.Artigo) error {
+	if m.SaveFn != nil {
+		return m.SaveFn(ctx, a)
+	}
+	return nil
+}
+func (m *MockArtigoRepository) FindByID(ctx context.Context, id string) (*entity.Artigo, error) {
+	if m.FindByIDFn != nil {
+		return m.FindByIDFn(ctx, id)
+	}
+	return nil, nil
+}
+func (m *MockArtigoRepository) FindBySlug(ctx context.Context, slug valueobject.Slug) (*entity.Artigo, error) {
+	if m.FindBySlugFn != nil {
+		return m.FindBySlugFn(ctx, slug)
+	}
+	return nil, nil
+}
+func (m *MockArtigoRepository) ListPublicados(ctx context.Context, limit, offset int) ([]*entity.Artigo, error) {
+	if m.ListPublicadosFn != nil {
+		return m.ListPublicadosFn(ctx, limit, offset)
+	}
+	return nil, nil
+}
+func (m *MockArtigoRepository) SlugExiste(ctx context.Context, slug valueobject.Slug) (bool, error) {
+	if m.SlugExisteFn != nil {
+		return m.SlugExisteFn(ctx, slug)
+	}
+	return false, nil
+}
+func (m *MockArtigoRepository) AtualizarEmbedding(ctx context.Context, id string, embedding []float32) error {
+	if m.AtualizarEmbeddingFn != nil {
+		return m.AtualizarEmbeddingFn(ctx, id, embedding)
+	}
+	return nil
+}
+func (m *MockArtigoRepository) BuscarPublicados(ctx context.Context, q string, limit int) ([]repository.ResultadoBusca, error) {
+	if m.BuscarPublicadosFn != nil {
+		return m.BuscarPublicadosFn(ctx, q, limit)
+	}
+	return nil, nil
+}

@@ -13,50 +13,33 @@ import (
 	domainErros "github.com/thiago-tertuliano/estudos-platform/internal/domain/shared/errors"
 )
 
-type MockArtigoRepository struct {
-	SaveFn               func(ctx context.Context, a *entity.Artigo) error
-	FindByIDFn           func(ctx context.Context, id string) (*entity.Artigo, error)
-	FindBySlugFn         func(ctx context.Context, slug valueobject.Slug) (*entity.Artigo, error)
-	ListPublicadosFn     func(ctx context.Context, limit, offset int) ([]*entity.Artigo, error)
-	SlugExisteFn         func(ctx context.Context, slug valueobject.Slug) (bool, error)
-	AtualizarEmbeddingFn func(ctx context.Context, id string, embedding []float32) error
-	BuscarPublicadosFn   func(ctx context.Context, q string, limit int) ([]repository.ResultadoBusca, error)
+// --- MOCK INTELIGENTE E ISOLADO PARA TRILHAS ---
+// Embutir a interface 'repository.TrilhaRepository' faz o Go aceitar essa struct
+// sem precisarmos implementar os 10 métodos que ela tem. Sobrescrevemos só o que o teste usa.
+type MockTrilhaRepoParaArtigo struct {
+	repository.TrilhaRepository 
+	FindByIDFn func(ctx context.Context, id string) (*entity.Trilha, error)
 }
 
-func (m *MockArtigoRepository) Save(ctx context.Context, a *entity.Artigo) error {
-	return m.SaveFn(ctx, a)
-}
-func (m *MockArtigoRepository) FindByID(ctx context.Context, id string) (*entity.Artigo, error) {
-	return m.FindByIDFn(ctx, id)
-}
-func (m *MockArtigoRepository) FindBySlug(ctx context.Context, slug valueobject.Slug) (*entity.Artigo, error) {
-	return m.FindBySlugFn(ctx, slug)
-}
-func (m *MockArtigoRepository) ListPublicados(ctx context.Context, limit, offset int) ([]*entity.Artigo, error) {
-	return m.ListPublicadosFn(ctx, limit, offset)
-}
-func (m *MockArtigoRepository) SlugExiste(ctx context.Context, slug valueobject.Slug) (bool, error) {
-	return m.SlugExisteFn(ctx, slug)
-}
-func (m *MockArtigoRepository) AtualizarEmbedding(ctx context.Context, id string, embedding []float32) error {
-	if m.AtualizarEmbeddingFn != nil {
-		return m.AtualizarEmbeddingFn(ctx, id, embedding)
-	}
-	return nil
-}
-func (m *MockArtigoRepository) BuscarPublicados(ctx context.Context, q string, limit int) ([]repository.ResultadoBusca, error) {
-	if m.BuscarPublicadosFn != nil {
-		return m.BuscarPublicadosFn(ctx, q, limit)
+func (m *MockTrilhaRepoParaArtigo) FindByID(ctx context.Context, id string) (*entity.Trilha, error) {
+	if m.FindByIDFn != nil {
+		return m.FindByIDFn(ctx, id)
 	}
 	return nil, nil
 }
+
+// --- TESTES ---
 
 func TestCriarArtigo_Sucesso(t *testing.T) {
 	repo := &MockArtigoRepository{
 		SlugExisteFn: func(ctx context.Context, slug valueobject.Slug) (bool, error) { return false, nil },
 		SaveFn:       func(ctx context.Context, a *entity.Artigo) error { return nil },
 	}
-	uc := NewCriarArtigo(repo)
+	
+	// Usando o novo mock isolado
+	trilhaRepo := &MockTrilhaRepoParaArtigo{} 
+
+	uc := NewCriarArtigo(repo, trilhaRepo)
 	resp, err := uc.Execute(context.Background(), dto.CriarArtigoRequest{
 		Titulo:   "Arquitetura Hexagonal",
 		Conteudo: json.RawMessage(`{"blocks":[]}`),
@@ -76,7 +59,11 @@ func TestCriarArtigo_SlugDuplicado(t *testing.T) {
 	repo := &MockArtigoRepository{
 		SlugExisteFn: func(ctx context.Context, slug valueobject.Slug) (bool, error) { return true, nil },
 	}
-	uc := NewCriarArtigo(repo)
+	
+	// Usando o novo mock isolado
+	trilhaRepo := &MockTrilhaRepoParaArtigo{} 
+
+	uc := NewCriarArtigo(repo, trilhaRepo)
 	_, err := uc.Execute(context.Background(), dto.CriarArtigoRequest{Titulo: "Teste"}, uuid.New().String())
 	if de, ok := err.(*domainErros.DomainError); !ok || de.Kind != domainErros.AlreadyExists {
 		t.Fatalf("esperava AlreadyExists, got %#v", err)
@@ -96,6 +83,7 @@ func TestPublicarArtigo_Sucesso(t *testing.T) {
 		FindByIDFn: func(ctx context.Context, id string) (*entity.Artigo, error) { return artigo, nil },
 		SaveFn:     func(ctx context.Context, a *entity.Artigo) error { return nil },
 	}
+	
 	uc := NewPublicarArtigo(repo, nil)
 	resp, err := uc.Execute(context.Background(), artigo.ID().String(), autor.String())
 	if err != nil {
