@@ -38,6 +38,8 @@ func TestIntegration_RegistrarECriarArtigo(t *testing.T) {
 	usuarios := pgrepo.NewUsuarioRepoPG(pool)
 	refresh := pgrepo.NewRefreshTokenRepoPG(pool)
 	artigos := pgrepo.NewArtigoRepoPG(pool)
+	trilhas := pgrepo.NewTrilhaRepoPG(pool) // Adicionado: Instancia o repositório de trilhas
+	
 	hasher := external.NewBcryptHasher(10)
 	tokens := external.NewJWTService("integration-secret-min-32-bytes!!")
 
@@ -50,7 +52,9 @@ func TestIntegration_RegistrarECriarArtigo(t *testing.T) {
 		t.Fatalf("registrar: %v", err)
 	}
 
-	criar := usecase.NewCriarArtigo(artigos)
+	// Adicionado: Passando o repositório de trilhas como segundo argumento
+	criar := usecase.NewCriarArtigo(artigos, trilhas) 
+	
 	artigo, err := criar.Execute(ctx, dto.CriarArtigoRequest{
 		Titulo:   "Artigo de integração",
 		Conteudo: []byte(`{"blocks":[{"type":"p","text":"ok"}]}`),
