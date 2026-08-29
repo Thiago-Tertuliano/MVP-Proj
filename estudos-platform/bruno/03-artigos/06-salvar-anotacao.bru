@@ -1,0 +1,35 @@
+meta {
+  name: Salvar Anotacao
+  type: http
+  seq: 6
+}
+
+put {
+  url: {{baseUrl}}/api/v1/artigos/{{artigoId}}/anotacoes
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "conteudo": {
+      "notes": [
+        { "texto": "Relembrar Aggregate Root" }
+      ],
+      "highlights": [],
+      "bookmarks": []
+    }
+  }
+}
+
+assert {
+  res.status: eq 200
+}
