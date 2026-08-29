@@ -26,14 +26,14 @@ jobs:
           name=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]')
           echo "branch=$name"
 
-          if echo "$name" | grep -Eq '^(feat|fix|bug|ref|refactor|ci|docs|chore)/[a-z0-9._-]+$'; then
+          if echo "$name" | grep -Eq '^(feat|feature|hotfix|fix|bugfix|bug|ref|refactor|ci|docs|chore)/[a-z0-9._-]+$'; then
             echo "nome de branch válido"
             exit 0
           fi
 
           echo "::error::Branch inválida: '$BRANCH'"
           echo "Use: type/descricao-em-kebab-case"
-          echo "Tipos: feat/  fix/  bug/  ref/  ci/  docs/  chore/"
+          echo "Tipos: feat/  feature/  hotfix/  fix/  bugfix/  bug/  ref/  refactor/  ci/  docs/  chore/"
           echo "Exemplo: feat/vincular-artigo-trilha"
           exit 1
 
@@ -49,7 +49,7 @@ jobs:
 
           echo "title=$TITLE"
           # feat: texto  |  feat(escopo): texto  |  fix, bug, ref, ci, docs, chore
-          if echo "$TITLE" | grep -Eq '^(feat|fix|bug|ref|refactor|ci|docs|chore)(\([a-z0-9_-]+\))?: .+'; then
+          if echo "$TITLE" | grep -Eq '^(feat|feature|hotfix|fix|bugfix|bug|ref|refactor|ci|docs|chore)(\([a-z0-9_-]+\))?: .+'; then
             echo "título de PR válido"
             exit 0
           fi
