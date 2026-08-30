@@ -112,6 +112,26 @@ func (t *Trilha) Ordem() int             { return t.ordem }
 func (t *Trilha) Publicada() bool        { return t.publicada }
 func (t *Trilha) Modulos() []*Modulo     { return t.modulos }
 
+func (t *Trilha) AtualizarCatalogo(titulo, descricao string, ordem int) error {
+	if len(titulo) < 3 || len(titulo) > 200 {
+		return errors.ErrInvalidArgument("título deve ter entre 3 e 200 caracteres", "Trilha.AtualizarCatalogo", nil)
+	}
+	t.titulo = titulo
+	t.descricao = descricao
+	t.ordem = ordem
+	t.Touch()
+	return nil
+}
+
+func (t *Trilha) ModuloPorSlug(slug valueobject.Slug) *Modulo {
+	for _, m := range t.modulos {
+		if m.slug.Equals(slug) {
+			return m
+		}
+	}
+	return nil
+}
+
 func (t *Trilha) AdicionarModulo(slug valueobject.Slug, titulo, descricao string) (*Modulo, error) {
 	for _, m := range t.modulos {
 		if m.slug.Equals(slug) {
