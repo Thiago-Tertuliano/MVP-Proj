@@ -1,0 +1,144 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    branches: [dev]
+    types: [opened, edited, synchronize, reopened]
+    paths:
+      - "estudos-platform/frontend-platform/**"
+      - ".github/workflows/frontend.yml"
+  push:
+    branches: [dev]
+    paths:
+      - "estudos-platform/frontend-platform/**"
+      - ".github/workflows/frontend.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: frontend-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FRONTEND_DIR: estudos-platform/frontend-platform
+  NEXT_PUBLIC_API_URL: http://localhost:8080
+
+jobs:
+  branch-name:
+    name: branch-name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR branch name
+        env:
+          EVENT: ${{ github.event_name }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "Não é PR — skip da validação de nome"
+            exit 0
+          fi
+
+          name=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]')
+          echo "branch=$name"
+
+          if echo "$name" | grep -Eq '^(feat|fix|bug|ref|refactor|ci|docs|chore)/[a-z0-9._-]+$'; then
+            echo "nome de branch válido"
+            exit 0
+          fi
+
+          echo "::error::Branch inválida: '$BRANCH'"
+          echo "Use: type/descricao-em-kebab-case"
+          echo "Tipos: feat/  fix/  bug/  ref/  ci/  docs/  chore/"
+          exit 1
+
+      - name: Validate PR title
+        env:
+          EVENT: ${{ github.event_name }}
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "Não é PR — skip da validação de título"
+            exit 0
+          fi
+
+          echo "title=$TITLE"
+          if echo "$TITLE" | grep -Eq '^(feat|fix|bug|ref|refactor|ci|docs|chore)(\([a-z0-9_-]+\))?: .+'; then
+            echo "título de PR válido"
+            exit 0
+          fi
+
+          echo "::error::Título de PR inválido: '$TITLE'"
+          echo "Use conventional commits: tipo: descrição"
+          exit 1
+
+  lint:
+    name: lint
+    needs: branch-name
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.FRONTEND_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint (next lint)
+        run: npm run lint
+
+  typecheck:
+    name: typecheck
+    needs: branch-name
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.FRONTEND_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript (tsc --noEmit)
+        run: npm run typecheck
+
+  build:
+    name: build
+    needs: [lint, typecheck]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.FRONTEND_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ${{ env.FRONTEND_DIR }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Next.js production build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ env.NEXT_PUBLIC_API_URL }}
+
+      - name: Build summary
+        run: |
+          echo "## Frontend build" >> "$GITHUB_STEP_SUMMARY"
+          echo "Next.js compilou com \`NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL\`" >> "$GITHUB_STEP_SUMMARY"
