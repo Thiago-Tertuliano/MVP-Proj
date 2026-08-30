@@ -1,0 +1,73 @@
+name: Content CI
+
+on:
+  pull_request:
+    branches: [dev]
+    types: [opened, edited, synchronize, reopened]
+    paths:
+      - "estudos-platform/fontes/**"
+      - "estudos-platform/content/**"
+      - "estudos-platform/backend-platform/internal/infrastructure/content/**"
+      - "estudos-platform/backend-platform/internal/applications/estudos/usecase/importar_conteudo*.go"
+      - "estudos-platform/backend-platform/cmd/content-job/**"
+      - ".github/workflows/content.yml"
+  push:
+    branches: [dev]
+    paths:
+      - "estudos-platform/fontes/**"
+      - "estudos-platform/content/**"
+      - "estudos-platform/backend-platform/internal/infrastructure/content/**"
+      - "estudos-platform/backend-platform/internal/applications/estudos/usecase/importar_conteudo*.go"
+      - "estudos-platform/backend-platform/cmd/content-job/**"
+      - ".github/workflows/content.yml"
+  workflow_dispatch:
+
+jobs:
+  content:
+    name: parsers-and-dry-run
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: estudos-platform/backend-platform
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.1"
+          cache-dependency-path: estudos-platform/backend-platform/go.sum
+
+      - name: Test content parsers
+        run: go test ./internal/infrastructure/content/... -race -count=1
+
+      - name: Dry-run content-job
+        id: dryrun
+        run: |
+          set -euo pipefail
+          out=$(go run ./cmd/content-job --dry-run 2>&1 | tee /tmp/content-dry-run.log)
+          echo "$out"
+
+          trilhas=$(echo "$out" | grep -c '^trilha ' || true)
+          avisos=$(echo "$out" | grep -c '^aviso:' || true)
+
+          echo "trilhas=$trilhas" >> "$GITHUB_OUTPUT"
+          echo "avisos=$avisos" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Content dry-run"
+            echo ""
+            echo "| Métrica | Valor |"
+            echo "|---------|-------|"
+            echo "| Trilhas processadas | $trilhas |"
+            echo "| Avisos | $avisos |"
+            echo ""
+            if [ "$avisos" -gt 0 ]; then
+              echo "### Avisos"
+              echo '```'
+              grep '^aviso:' /tmp/content-dry-run.log || true
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build content-job
+        run: go build -o /tmp/content-job ./cmd/content-job

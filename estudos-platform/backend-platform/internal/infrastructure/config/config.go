@@ -32,28 +32,31 @@ func Load() *Config {
 	// .env é opcional (em produção as variáveis vêm do ambiente do host)
 	_ = godotenv.Load()
 
-	cfg := &Config{
-		AppEnv:  getEnv("APP_ENV", "development"),
-		AppPort: getEnv("APP_PORT", "8080"),
-
-		DBHost:     getEnv("DB_HOST", "localhost"),
-		DBPort:     getEnv("DB_PORT", "5432"),
-		DBUser:     getEnv("DB_USER", "estudos"),
-		DBPassword: getEnv("DB_PASSWORD", "estudos_dev"),
-		DBName:     getEnv("DB_NAME", "estudos_platform"),
-		DBSSLMode:  getEnv("DB_SSL_MODE", "disable"),
-
-		JWTSecret:          getEnv("JWT_SECRET", ""),
-		JWTAccessTTLMin:    getEnvInt("JWT_ACCESS_TTL_MIN", 15),
-		JWTRefreshTTLHours: getEnvInt("JWT_REFRESH_TTL_HOURS", 168),
-
-		CORSAllowedOrigins: splitCSV(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000")),
-	}
+	cfg := LoadDB()
+	cfg.AppEnv = getEnv("APP_ENV", "development")
+	cfg.AppPort = getEnv("APP_PORT", "8080")
+	cfg.JWTSecret = getEnv("JWT_SECRET", "")
+	cfg.JWTAccessTTLMin = getEnvInt("JWT_ACCESS_TTL_MIN", 15)
+	cfg.JWTRefreshTTLHours = getEnvInt("JWT_REFRESH_TTL_HOURS", 168)
+	cfg.CORSAllowedOrigins = splitCSV(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"))
 
 	if cfg.JWTSecret == "" {
 		log.Fatal("JWT_SECRET é obrigatório")
 	}
 	return cfg
+}
+
+// LoadDB lê só o Postgres. CLIs (migrate, content-job) não exigem JWT_SECRET.
+func LoadDB() *Config {
+	_ = godotenv.Load()
+	return &Config{
+		DBHost:     getEnv("DB_HOST", "localhost"),
+		DBPort:     getEnv("DB_PORT", "5433"),
+		DBUser:     getEnv("DB_USER", "estudos"),
+		DBPassword: getEnv("DB_PASSWORD", "estudos_dev"),
+		DBName:     getEnv("DB_NAME", "estudos_platform"),
+		DBSSLMode:  getEnv("DB_SSL_MODE", "disable"),
+	}
 }
 
 func getEnv(key, fallback string) string {

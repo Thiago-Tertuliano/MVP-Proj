@@ -29,7 +29,7 @@ flowchart LR
 | Logout | `POST /auth/logout` | #7 |
 | Artigos | `GET/POST /artigos`, `PUT`, `publicar` | #8 |
 | Trilhas + módulos | `GET/POST /trilhas`, módulos, publicar | #9 |
-| Collection Bruno + aula | `bruno/`, `docs/` | #9 / #10 |
+| Collection Bruno + aula | `bruno/`, `fontes/` | #9 / #10 |
 
 **Ainda não existe no código:** vínculo artigo↔trilha, progresso, anotações, busca semântica, frontend.
 

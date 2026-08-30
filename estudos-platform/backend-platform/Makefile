@@ -1,4 +1,4 @@
-.PHONY: dev build run migrate-up migrate-down test lint
+.PHONY: dev build run migrate-up migrate-down test lint content-job content-job-dry
 
 dev:            ## roda API com hot reload (instale o air: go install github.com/air-verse/air@latest)
 	air
@@ -20,3 +20,9 @@ test:           ## testes
 
 lint:           ## linter
 	golangci-lint run ./...
+
+content-job-dry: ## valida Courses.md + aula Go sem gravar
+	go run ./cmd/content-job --dry-run
+
+content-job:    ## upsert rascunhos no Postgres (não publica)
+	go run ./cmd/content-job
