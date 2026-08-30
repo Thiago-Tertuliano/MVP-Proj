@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0f1419;
+  --foreground: #e6edf3;
+}
+
+body {
+  @apply bg-surface text-[var(--foreground)] antialiased;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-lg border border-surface-border px-4 py-2 text-sm text-[var(--foreground)] transition hover:border-accent hover:text-accent;
+  }
+  .card {
+    @apply rounded-xl border border-surface-border bg-surface-raised p-5;
+  }
+}

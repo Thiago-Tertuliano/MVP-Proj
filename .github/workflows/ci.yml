@@ -4,8 +4,14 @@ on:
   pull_request:
     branches: [dev]
     types: [opened, edited, synchronize, reopened]
+    paths:
+      - "estudos-platform/backend-platform/**"
+      - ".github/workflows/ci.yml"
   push:
     branches: [dev]
+    paths:
+      - "estudos-platform/backend-platform/**"
+      - ".github/workflows/ci.yml"
   workflow_dispatch:
 
 jobs:
