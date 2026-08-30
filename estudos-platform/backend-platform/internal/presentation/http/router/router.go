@@ -31,6 +31,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	artigoRepo := pgrepo.NewArtigoRepoPG(pool)
 	trilhaRepo := pgrepo.NewTrilhaRepoPG(pool)
 	progressoRepo := pgrepo.NewProgressoRepoPG(pool)
+	anotacaoRepo := pgrepo.NewAnotacaoRepoPG(pool)
 
 	hasher := external.NewBcryptHasher(10)
 	tokens := external.NewJWTService(cfg.JWTSecret)
@@ -63,6 +64,8 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	marcarLidoUC := usecase.NewMarcarArtigoLido(artigoRepo, progressoRepo)
 	progressoTrilhaUC := usecase.NewObterProgressoTrilha(progressoRepo)
 	buscarUC := usecase.NewBuscarArtigos(artigoRepo)
+	salvarAnotacaoUC := usecase.NewSalvarAnotacao(artigoRepo, anotacaoRepo)
+	obterAnotacaoUC := usecase.NewObterAnotacao(anotacaoRepo)
 
 	auth := handler.NewAuthHandler(registrarUC, loginUC, refreshUC, perfilUC, logoutUC, handler.AuthCookies{
 		AccessMaxAge:  cfg.JWTAccessTTLMin * 60,
@@ -73,7 +76,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	trilhas := handler.NewTrilhaHandler(criarTrilhaUC, obterTrilhaUC, listarTrilhasUC, adicionarModuloUC, publicarTrilhaUC, )
 	progresso := handler.NewProgressoHandler(marcarLidoUC, progressoTrilhaUC)
 	busca := handler.NewBuscaHandler(buscarUC)
-
+	anotacoes := handler.NewAnotacaoHandler(salvarAnotacaoUC, obterAnotacaoUC)
 	r.Route("/api/v1", func(api chi.Router) {
 		limiteAuth := middleware.NewRateLimit(10, time.Minute)
 		api.Group(func(pub chi.Router) {
@@ -102,6 +105,8 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 			pr.Post("/trilhas/{id}/publicar", trilhas.Publicar)
 			pr.Put("/progresso/artigos/{id}", progresso.MarcarArtigo)
 			pr.Get("/progresso/trilhas/{id}", progresso.ObterTrilha)
+			pr.Put("/artigos/{id}/anotacoes", anotacoes.Salvar)
+			pr.Get("/artigos/{id}/anotacoes", anotacoes.Obter)
 		})
 	})
 
