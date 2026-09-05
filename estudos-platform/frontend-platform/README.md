@@ -25,6 +25,18 @@ npm run dev
 
 Abre [http://localhost:3000](http://localhost:3000). API padrão: `http://localhost:8080`.
 
+## Storybook
+
+```powershell
+npm run storybook
+```
+
+Abre [http://localhost:6006](http://localhost:6006). Addons: essentials, a11y, themes (light/dark). Preview carrega `app/globals.css` (Tailwind + tokens).
+
+```powershell
+npm run build-storybook
+```
+
 ## Scripts (CI)
 
 | Comando | Uso |
@@ -32,5 +44,7 @@ Abre [http://localhost:3000](http://localhost:3000). API padrão: `http://localh
 | `npm run lint` | ESLint (`next lint`) |
 | `npm run typecheck` | TypeScript sem emitir |
 | `npm run build` | Build de produção |
+| `npm run storybook` | DS visual (porta 6006) |
+| `npm run build-storybook` | Build estático do Storybook |
 
-A esteira **Frontend CI** (`.github/workflows/frontend.yml`) roda esses três passos em PRs/push que tocam `frontend-platform/`.
+A esteira **Frontend CI** (`.github/workflows/frontend.yml`) roda lint/typecheck/build em PRs/push que tocam `frontend-platform/`.
