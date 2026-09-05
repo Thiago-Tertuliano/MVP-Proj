@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArticleRenderer } from "@/components/ArticleRenderer";
-import { QuizPanel } from "@/components/QuizPanel";
+import { ArticleRenderer } from "@/components/relp/ArticleRenderer";
+import { QuizPanel } from "@/components/relp/QuizPanel";
 import { getArtigo, getTrilha } from "@/lib/mock-data";
 
 type Props = { params: { slug: string } };
