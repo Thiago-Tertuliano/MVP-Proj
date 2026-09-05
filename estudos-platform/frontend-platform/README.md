@@ -25,13 +25,20 @@ npm run dev
 
 Abre [http://localhost:3000](http://localhost:3000). API padrão: `http://localhost:8080`.
 
+## Design system
+
+- Primitivos shadcn/ui em `components/ui/` (Button, Input)
+- Ícones: `lucide-react`
+- Utilitário `cn()` em `lib/utils.ts`
+- Config: `components.json` (estilo new-york)
+
 ## Storybook
 
 ```powershell
 npm run storybook
 ```
 
-Abre [http://localhost:6006](http://localhost:6006). Addons: essentials, a11y, themes (light/dark). Preview carrega `app/globals.css` (Tailwind + tokens).
+Abre [http://localhost:6006](http://localhost:6006). Addons: essentials, a11y, themes (light/dark). Preview carrega `app/globals.css` (Tailwind + tokens). Stories: `UI/Button`, `UI/Input`, `Foundations/Colors`.
 
 ```powershell
 npm run build-storybook

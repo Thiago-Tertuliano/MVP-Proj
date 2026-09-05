@@ -1,12 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 const SWATCHES = [
+  { name: "primary", className: "bg-primary" },
+  { name: "secondary", className: "bg-secondary border border-border" },
   { name: "accent", className: "bg-accent" },
-  { name: "accent-muted", className: "bg-accent-muted" },
-  { name: "success", className: "bg-success" },
-  { name: "warning", className: "bg-warning" },
-  { name: "surface", className: "bg-surface border border-surface-border" },
-  { name: "surface-raised", className: "bg-surface-raised border border-surface-border" },
+  { name: "destructive", className: "bg-destructive" },
+  { name: "muted", className: "bg-muted border border-border" },
+  { name: "background", className: "bg-background border border-border" },
+  { name: "card", className: "bg-card border border-border" },
 ] as const;
 
 function ColorSwatches() {
@@ -15,7 +16,7 @@ function ColorSwatches() {
       {SWATCHES.map((swatch) => (
         <div key={swatch.name} className="space-y-2">
           <div className={`h-16 rounded-lg ${swatch.className}`} />
-          <p className="text-sm text-[var(--foreground)]">{swatch.name}</p>
+          <p className="text-sm text-foreground">{swatch.name}</p>
         </div>
       ))}
     </div>
