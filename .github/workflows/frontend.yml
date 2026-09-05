@@ -142,3 +142,21 @@ jobs:
         run: |
           echo "## Frontend build" >> "$GITHUB_STEP_SUMMARY"
           echo "Next.js compilou com \`NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL\`" >> "$GITHUB_STEP_SUMMARY"
+
+  # Ruleset de `dev` exige o check `test-coverage-build` (job do CI Go).
+  # Em PRs só de frontend esse workflow de backend não dispara — sem este stub
+  # o GitHub fica em "Expected — Waiting for status to be reported".
+  test-coverage-build:
+    name: test-coverage-build
+    needs: branch-name
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report required check (frontend-only)
+        run: |
+          echo "PRs só de frontend não rodam coverage Go."
+          echo "Stub para satisfazer o ruleset de \`dev\`. Coverage real: workflow CI (backend)."
+          {
+            echo "## test-coverage-build (stub frontend)"
+            echo ""
+            echo "Skipped — mudança só em frontend. Coverage real está no workflow **CI** (backend)."
+          } >> "$GITHUB_STEP_SUMMARY"
