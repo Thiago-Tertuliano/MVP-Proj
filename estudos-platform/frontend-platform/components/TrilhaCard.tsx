@@ -11,25 +11,25 @@ export function TrilhaCard({ trilha }: Props) {
   );
 
   return (
-    <article className="card flex flex-col gap-4 transition hover:border-accent/40">
+    <article className="card flex flex-col gap-4 transition hover:border-primary/40">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold">{trilha.titulo}</h2>
-          <p className="mt-1 text-sm text-zinc-400">{trilha.descricao}</p>
+          <h2 className="text-lg font-semibold text-fg">{trilha.titulo}</h2>
+          <p className="mt-1 text-sm text-muted">{trilha.descricao}</p>
         </div>
-        <span className="shrink-0 rounded-full bg-accent-muted px-2.5 py-0.5 text-xs font-medium text-accent">
+        <span className="shrink-0 rounded-full bg-done-muted px-2.5 py-0.5 text-xs font-medium text-done">
           {trilha.progressoPct}%
         </span>
       </div>
 
-      <div className="h-1.5 overflow-hidden rounded-full bg-zinc-800">
+      <div className="h-1.5 overflow-hidden rounded-full bg-progress-track">
         <div
-          className="h-full rounded-full bg-accent transition-all"
+          className="h-full rounded-full bg-done transition-all"
           style={{ width: `${trilha.progressoPct}%` }}
         />
       </div>
 
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs text-muted">
         {concluidos} / {totalArtigos} nós lidos · {trilha.modulos.length} módulos
       </p>
 

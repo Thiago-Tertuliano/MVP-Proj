@@ -4,7 +4,7 @@ type Props = { blocks: Block[] };
 
 export function ArticleRenderer({ blocks }: Props) {
   return (
-    <div className="prose prose-invert max-w-none space-y-4">
+    <div className="prose max-w-none space-y-4">
       {blocks.map((block, i) => {
         if (block.type === "h") {
           const Tag = block.level <= 2 ? "h2" : "h3";
@@ -13,8 +13,8 @@ export function ArticleRenderer({ blocks }: Props) {
               key={i}
               className={
                 block.level <= 2
-                  ? "text-xl font-semibold text-white"
-                  : "text-lg font-medium text-zinc-200"
+                  ? "text-xl font-semibold text-fg"
+                  : "text-lg font-medium text-fg"
               }
             >
               {block.text}
@@ -25,7 +25,7 @@ export function ArticleRenderer({ blocks }: Props) {
           return (
             <pre
               key={i}
-              className="overflow-x-auto rounded-lg border border-surface-border bg-[#0d1117] p-4 font-mono text-sm leading-relaxed text-zinc-200"
+              className="overflow-x-auto rounded-relp-md border border-border bg-bg p-4 font-mono text-sm leading-relaxed text-fg"
             >
               <code>{block.text}</code>
             </pre>
@@ -39,7 +39,7 @@ export function ArticleRenderer({ blocks }: Props) {
                 href={block.text}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="break-all text-accent underline-offset-2 hover:underline"
+                className="break-all text-primary underline-offset-2 hover:underline"
               >
                 {block.text}
               </a>
@@ -47,7 +47,7 @@ export function ArticleRenderer({ blocks }: Props) {
           );
         }
         return (
-          <p key={i} className="leading-relaxed text-zinc-300">
+          <p key={i} className="leading-relaxed text-muted">
             {block.text}
           </p>
         );
