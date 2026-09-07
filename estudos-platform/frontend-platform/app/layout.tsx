@@ -15,8 +15,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Estudos Platform",
-  description: "Trilhas de estudo em TI — roadmap, progresso e leitura",
+  title: "Relp! — Plataforma de Aprendizado",
+  description: "Trilhas interativas de tecnologia com progresso personalizado, anotações e busca inteligente",
 };
 
 export default function RootLayout({

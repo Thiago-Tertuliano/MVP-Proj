@@ -8,24 +8,26 @@ export function RoadmapMap({ trilha }: Props) {
     <div className="grid gap-8 md:grid-cols-2">
       {trilha.modulos.map((modulo) => (
         <section key={modulo.slug} className="card">
-          <div className="mb-4 border-b border-surface-border pb-3">
-            <h2 className="font-semibold">{modulo.titulo}</h2>
-            <p className="text-sm text-zinc-400">{modulo.descricao}</p>
+          <div className="mb-4 border-b border-border pb-3">
+            <h2 className="font-semibold text-fg">{modulo.titulo}</h2>
+            <p className="text-sm text-muted-foreground">{modulo.descricao}</p>
           </div>
           <ul className="flex flex-col gap-2">
             {modulo.artigos.map((artigo, idx) => (
               <li key={artigo.slug}>
                 <Link
                   href={`/artigos/${artigo.slug}`}
-                  className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-sm transition ${
+                  className={`flex items-center gap-3 rounded-relp-md border px-4 py-3 text-sm transition ${
                     artigo.concluido
-                      ? "border-success/30 bg-success/5 text-zinc-200"
-                      : "border-surface-border hover:border-accent/50 hover:bg-accent-muted/30"
+                      ? "border-done/30 bg-done-muted/50 text-fg"
+                      : "border-border text-fg hover:border-primary/50 hover:bg-primary-muted/50"
                   }`}
                 >
                   <span
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                      artigo.concluido ? "bg-success/20 text-success" : "bg-zinc-800 text-zinc-400"
+                      artigo.concluido
+                        ? "bg-done/20 text-done"
+                        : "bg-progress-track text-muted-foreground"
                     }`}
                   >
                     {artigo.concluido ? "L" : idx + 1}

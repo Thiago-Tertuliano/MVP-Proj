@@ -2,13 +2,13 @@ import Link from "next/link";
 
 export function SiteHeader() {
   return (
-    <header className="border-b border-surface-border bg-surface-raised/80 backdrop-blur">
+    <header className="border-b border-border bg-surface-raised/80 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
         <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-foreground">
             EP
           </span>
-          Estudos Platform
+          Relp!
         </Link>
         <nav className="flex items-center gap-3 text-sm">
           <Link href="/" className="text-muted-foreground transition hover:text-foreground">
