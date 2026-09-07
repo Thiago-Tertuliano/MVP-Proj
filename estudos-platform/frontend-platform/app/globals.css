@@ -2,23 +2,95 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #0f1419;
-  --foreground: #e6edf3;
-}
+/*
+  Tokens shadcn (HSL channels) alinhados à marca Relp azul.
+  Hex/HSL só aqui — componentes usam classes semantic as (bg-primary, etc.).
+*/
 
-body {
-  @apply bg-surface text-[var(--foreground)] antialiased;
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 213 65% 33%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 213 70% 95%;
+    --accent-foreground: 213 65% 33%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 213 65% 33%;
+
+    --radius: 0.5rem;
+
+    /* Legado Relp mock (páginas atuais) */
+    --relp-bg: 210 20% 98%;
+    --relp-fg: 222 47% 11%;
+  }
+
+  .dark {
+    --background: 215 28% 7%;
+    --foreground: 210 40% 96%;
+
+    --card: 215 25% 11%;
+    --card-foreground: 210 40% 96%;
+
+    --popover: 215 25% 11%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 210 60% 60%;
+    --primary-foreground: 215 28% 7%;
+
+    --secondary: 215 25% 16%;
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 215 25% 16%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 215 30% 18%;
+    --accent-foreground: 210 60% 70%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 20% 22%;
+    --input: 215 20% 22%;
+    --ring: 210 60% 60%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500;
+    @apply inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-lg border border-surface-border px-4 py-2 text-sm text-[var(--foreground)] transition hover:border-accent hover:text-accent;
+    @apply inline-flex items-center justify-center rounded-md border border-border px-4 py-2 text-sm text-foreground transition hover:border-primary hover:text-primary;
   }
   .card {
-    @apply rounded-xl border border-surface-border bg-surface-raised p-5;
+    @apply rounded-xl border border-border bg-card p-5;
   }
 }

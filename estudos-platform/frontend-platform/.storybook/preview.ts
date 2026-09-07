@@ -32,8 +32,7 @@ const preview: Preview = {
       React.createElement(
         "div",
         {
-          className:
-            "min-h-screen bg-surface p-6 font-sans text-[var(--foreground)] antialiased",
+          className: "min-h-screen bg-background p-6 font-sans text-foreground antialiased",
         },
         React.createElement(Story),
       ),
