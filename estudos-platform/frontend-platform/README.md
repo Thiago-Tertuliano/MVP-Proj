@@ -2,6 +2,41 @@
 
 Next.js 14 (App Router) + TypeScript. Consome a API em `backend-platform`.
 
+## Arquitetura de pastas
+
+Três camadas. Não misturar:
+
+| Pasta | O que entra | O que **não** entra |
+|-------|-------------|---------------------|
+| `app/` | Rotas, layouts, pages (App Router). Só orquestra dados + monta UI. | Lógica visual reutilizável, primitivos, client HTTP genérico |
+| `components/ui/` | Primitivos de mercado (shadcn/ui): Button, Input, Dialog… | Regras de negócio Relp (trilha, progresso, quiz) |
+| `components/relp/` | Componentes de domínio: header, card de trilha, roadmap, renderer de aula | Primitivos genéricos (button “cru”), rotas |
+
+```
+frontend-platform/
+├── app/                      # Rotas Next.js
+│   ├── layout.tsx
+│   ├── page.tsx              # Home (lista de trilhas)
+│   ├── login/page.tsx
+│   ├── trilhas/[slug]/page.tsx
+│   └── artigos/[slug]/page.tsx
+├── components/
+│   ├── ui/                   # shadcn — Button, Input, …
+│   └── relp/                 # Domínio Relp — SiteHeader, TrilhaCard, …
+├── lib/                      # utils (cn), types, mock-data, futuro api.ts
+├── stories/                  # Foundations do Storybook (cores, tipografia)
+├── .storybook/
+└── components.json           # Config shadcn (new-york)
+```
+
+**Regras rápidas**
+
+1. Página em `app/` importa de `@/components/relp/*` e `@/components/ui/*` — nunca o contrário (`ui` não importa `relp`).
+2. `relp` pode usar `ui` (ex.: botão shadcn dentro do card de trilha).
+3. Stories: `components/ui/*.stories.tsx` e `components/relp/*.stories.tsx` (quando existirem); foundations em `stories/`.
+4. Novo primitivo → `npx shadcn@latest add …` cai em `components/ui/`.
+5. Novo bloco de produto (busca, anotação, progresso) → `components/relp/`.
+
 ## Telas (mock — fidelidade visual)
 
 | Rota | Tela |
@@ -14,6 +49,14 @@ Next.js 14 (App Router) + TypeScript. Consome a API em `backend-platform`.
 
 Dados em `lib/mock-data.ts` — alinhados ao seed e ao content-job.
 
+## Design system
+
+- Primitivos shadcn/ui em `components/ui/` (Button, Input)
+- Domínio Relp em `components/relp/`
+- Ícones: `lucide-react`
+- Utilitário `cn()` em `lib/utils.ts`
+- Config: `components.json` (estilo new-york)
+
 ## Desenvolvimento
 
 ```powershell
@@ -24,13 +67,6 @@ npm run dev
 ```
 
 Abre [http://localhost:3000](http://localhost:3000). API padrão: `http://localhost:8080`.
-
-## Design system
-
-- Primitivos shadcn/ui em `components/ui/` (Button, Input)
-- Ícones: `lucide-react`
-- Utilitário `cn()` em `lib/utils.ts`
-- Config: `components.json` (estilo new-york)
 
 ## Storybook
 

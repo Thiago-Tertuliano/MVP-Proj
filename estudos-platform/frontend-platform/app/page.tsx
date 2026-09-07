@@ -1,4 +1,4 @@
-import { TrilhaCard } from "@/components/TrilhaCard";
+import { TrilhaCard } from "@/components/relp/TrilhaCard";
 import { trilhas, trilhasPublicadas } from "@/lib/mock-data";
 
 export default function HomePage() {

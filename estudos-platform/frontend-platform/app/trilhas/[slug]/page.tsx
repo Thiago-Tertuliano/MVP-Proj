@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { RoadmapMap } from "@/components/RoadmapMap";
+import { RoadmapMap } from "@/components/relp/RoadmapMap";
 import { getTrilha } from "@/lib/mock-data";
 
 type Props = { params: { slug: string } };
