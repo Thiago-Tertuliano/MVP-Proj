@@ -12,7 +12,7 @@ export function QuizPanel({ questoes }: Props) {
     <aside className="card space-y-4">
       <div>
         <h3 className="font-semibold text-fg">Checklist de estudo</h3>
-        <p className="mt-1 text-sm text-muted">
+        <p className="mt-1 text-sm text-muted-foreground">
           Não é prova — marque o que você já fez. Correção no servidor vem depois.
         </p>
       </div>
@@ -31,7 +31,7 @@ export function QuizPanel({ questoes }: Props) {
                     className={`rounded-relp-md border px-3 py-1.5 text-xs transition ${
                       selected
                         ? "border-primary bg-primary-muted text-primary"
-                        : "border-border text-muted hover:border-muted"
+                        : "border-border text-muted-foreground hover:border-border"
                     }`}
                   >
                     {op.texto}

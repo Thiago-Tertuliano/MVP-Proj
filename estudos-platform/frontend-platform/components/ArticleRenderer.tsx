@@ -47,7 +47,7 @@ export function ArticleRenderer({ blocks }: Props) {
           );
         }
         return (
-          <p key={i} className="leading-relaxed text-muted">
+          <p key={i} className="leading-relaxed text-muted-foreground">
             {block.text}
           </p>
         );

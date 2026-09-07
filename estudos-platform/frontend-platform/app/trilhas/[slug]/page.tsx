@@ -11,7 +11,7 @@ export default function TrilhaPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <nav className="text-sm text-muted">
+      <nav className="text-sm text-muted-foreground">
         <Link href="/" className="hover:text-primary">
           Trilhas
         </Link>
@@ -26,7 +26,7 @@ export default function TrilhaPage({ params }: Props) {
             {trilha.progressoPct}% concluído
           </span>
         </div>
-        <p className="text-muted">{trilha.descricao}</p>
+        <p className="text-muted-foreground">{trilha.descricao}</p>
         <div className="h-2 max-w-md overflow-hidden rounded-full bg-progress-track">
           <div
             className="h-full rounded-full bg-done"

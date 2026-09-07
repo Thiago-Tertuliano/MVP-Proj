@@ -15,7 +15,7 @@ export function TrilhaCard({ trilha }: Props) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-fg">{trilha.titulo}</h2>
-          <p className="mt-1 text-sm text-muted">{trilha.descricao}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{trilha.descricao}</p>
         </div>
         <span className="shrink-0 rounded-full bg-done-muted px-2.5 py-0.5 text-xs font-medium text-done">
           {trilha.progressoPct}%
@@ -29,7 +29,7 @@ export function TrilhaCard({ trilha }: Props) {
         />
       </div>
 
-      <p className="text-xs text-muted">
+      <p className="text-xs text-muted-foreground">
         {concluidos} / {totalArtigos} nós lidos · {trilha.modulos.length} módulos
       </p>
 

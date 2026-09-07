@@ -3,14 +3,14 @@ export default function LoginPage() {
     <div className="mx-auto max-w-md space-y-6">
       <header className="space-y-2 text-center">
         <h1 className="text-2xl font-bold text-fg">Entrar</h1>
-        <p className="text-sm text-muted">
+        <p className="text-sm text-muted-foreground">
           Mock de login — depois liga em POST /api/v1/auth/login
         </p>
       </header>
 
       <form className="card space-y-4">
         <label className="block space-y-1.5 text-sm">
-          <span className="text-muted">E-mail</span>
+          <span className="text-muted-foreground">E-mail</span>
           <input
             type="email"
             defaultValue="autor.seed@estudos.local"
@@ -18,7 +18,7 @@ export default function LoginPage() {
           />
         </label>
         <label className="block space-y-1.5 text-sm">
-          <span className="text-muted">Senha</span>
+          <span className="text-muted-foreground">Senha</span>
           <input
             type="password"
             defaultValue="senha1234"

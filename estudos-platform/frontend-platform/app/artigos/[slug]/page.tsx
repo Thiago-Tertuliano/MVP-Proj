@@ -15,7 +15,7 @@ export default function ArtigoPage({ params }: Props) {
 
   return (
     <div className="space-y-8">
-      <nav className="text-sm text-muted">
+      <nav className="text-sm text-muted-foreground">
         <Link href="/" className="hover:text-primary">
           Trilhas
         </Link>
@@ -45,15 +45,15 @@ export default function ArtigoPage({ params }: Props) {
                 {artigo.status}
               </span>
               {artigo.metadados.origem && (
-                <span className="text-xs text-muted">{artigo.metadados.origem}</span>
+                <span className="text-xs text-muted-foreground">{artigo.metadados.origem}</span>
               )}
             </div>
             <h1 className="text-3xl font-bold text-fg">{artigo.titulo}</h1>
             {artigo.metadados.objetivo && (
-              <p className="text-muted">{artigo.metadados.objetivo}</p>
+              <p className="text-muted-foreground">{artigo.metadados.objetivo}</p>
             )}
             {artigo.metadados.tempo_leitura_min && (
-              <p className="text-xs text-muted">
+              <p className="text-xs text-muted-foreground">
                 ~{artigo.metadados.tempo_leitura_min} min de leitura
               </p>
             )}

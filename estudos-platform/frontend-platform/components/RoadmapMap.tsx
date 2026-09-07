@@ -10,7 +10,7 @@ export function RoadmapMap({ trilha }: Props) {
         <section key={modulo.slug} className="card">
           <div className="mb-4 border-b border-border pb-3">
             <h2 className="font-semibold text-fg">{modulo.titulo}</h2>
-            <p className="text-sm text-muted">{modulo.descricao}</p>
+            <p className="text-sm text-muted-foreground">{modulo.descricao}</p>
           </div>
           <ul className="flex flex-col gap-2">
             {modulo.artigos.map((artigo, idx) => (
@@ -27,7 +27,7 @@ export function RoadmapMap({ trilha }: Props) {
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                       artigo.concluido
                         ? "bg-done/20 text-done"
-                        : "bg-progress-track text-muted"
+                        : "bg-progress-track text-muted-foreground"
                     }`}
                   >
                     {artigo.concluido ? "L" : idx + 1}
