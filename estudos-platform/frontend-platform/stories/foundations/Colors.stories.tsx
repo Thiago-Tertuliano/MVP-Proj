@@ -2,11 +2,15 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 const SWATCHES = [
   { name: "primary", className: "bg-primary" },
-  { name: "secondary", className: "bg-secondary border border-border" },
-  { name: "accent", className: "bg-accent" },
-  { name: "destructive", className: "bg-destructive" },
+  { name: "primary-muted", className: "bg-primary-muted" },
+  { name: "learn", className: "bg-learn" },
+  { name: "done", className: "bg-done" },
+  { name: "danger", className: "bg-danger" },
+  { name: "warning", className: "bg-warning" },
+  { name: "info", className: "bg-info" },
+  { name: "notify", className: "bg-notify" },
+  { name: "status-draft", className: "bg-status-draft" },
   { name: "muted", className: "bg-muted border border-border" },
-  { name: "background", className: "bg-background border border-border" },
   { name: "card", className: "bg-card border border-border" },
 ] as const;
 
