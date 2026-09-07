@@ -8,7 +8,7 @@ export function SiteHeader() {
           <span className="flex h-8 w-8 items-center justify-center rounded-relp-md bg-primary-muted text-primary">
             EP
           </span>
-          Estudos Platform
+          Relp!
         </Link>
         <nav className="flex items-center gap-3 text-sm">
           <Link href="/" className="text-muted transition hover:text-fg">
