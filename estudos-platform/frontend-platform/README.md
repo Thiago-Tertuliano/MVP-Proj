@@ -1,4 +1,4 @@
-# Frontend — Estudos Platform
+# Frontend — Relp!
 
 Next.js 14 (App Router) + TypeScript. Consome a API em `backend-platform`.
 
