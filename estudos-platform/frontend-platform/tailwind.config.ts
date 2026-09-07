@@ -4,78 +4,65 @@ import type { Config } from "tailwindcss";
 const token = (name: string) => `rgb(var(${name}) / <alpha-value>)`;
 
 const config: Config = {
+  darkMode: ["class"],
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./stories/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   darkMode: "class",
   theme: {
     extend: {
       colors: {
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: token("--relp-primary"),
-          hover: token("--relp-primary-hover"),
-          muted: token("--relp-primary-muted"),
-          fg: token("--relp-primary-fg"),
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
-        learn: {
-          DEFAULT: token("--relp-learn"),
-          muted: token("--relp-learn-muted"),
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
         },
-        done: {
-          DEFAULT: token("--relp-done"),
-          muted: token("--relp-done-muted"),
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
         },
-        "progress-track": token("--relp-progress-track"),
-        status: {
-          draft: token("--relp-status-draft"),
-          review: token("--relp-status-review"),
-          published: token("--relp-status-published"),
-          archived: token("--relp-status-archived"),
-          locked: token("--relp-status-locked"),
-        },
-        danger: {
-          DEFAULT: token("--relp-danger"),
-          muted: token("--relp-danger-muted"),
-        },
-        warning: {
-          DEFAULT: token("--relp-warning"),
-          muted: token("--relp-warning-muted"),
-        },
-        info: {
-          DEFAULT: token("--relp-info"),
-          muted: token("--relp-info-muted"),
-        },
-        notify: {
-          DEFAULT: token("--relp-notify"),
-          unread: token("--relp-notify-unread"),
-        },
-        bg: token("--relp-bg"),
-        fg: token("--relp-fg"),
-        muted: token("--relp-muted"),
-        surface: {
-          DEFAULT: token("--relp-surface"),
-          raised: token("--relp-surface-raised"),
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
         },
         border: token("--relp-border"),
         /* Aliases legados → tokens Relp (remover após F2) */
         accent: {
-          DEFAULT: token("--relp-primary"),
-          muted: token("--relp-primary-muted"),
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+          muted: "hsl(var(--accent))",
         },
-        success: token("--relp-done"),
-      },
-      spacing: {
-        "relp-1": "var(--relp-space-1)",
-        "relp-2": "var(--relp-space-2)",
-        "relp-3": "var(--relp-space-3)",
-        "relp-4": "var(--relp-space-4)",
-        "relp-6": "var(--relp-space-6)",
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        /* Aliases do mock atual → tokens shadcn */
+        surface: {
+          DEFAULT: "hsl(var(--background))",
+          raised: "hsl(var(--card))",
+          border: "hsl(var(--border))",
+        },
+        success: "#16A34A",
+        warning: "#D97706",
       },
       borderRadius: {
-        "relp-sm": "var(--relp-radius-sm)",
-        "relp-md": "var(--relp-radius-md)",
-        "relp-lg": "var(--relp-radius-lg)",
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
         sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
@@ -83,7 +70,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 };
 
 export default config;

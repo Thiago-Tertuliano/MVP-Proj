@@ -3,110 +3,94 @@
 @tailwind utilities;
 
 /*
-  Relp design tokens — hex só aqui.
-  Tailwind consome via rgb(var(--token) / <alpha-value>).
-  Default: tema claro (educação). .dark no <html> ativa o tema escuro.
+  Tokens shadcn (HSL channels) alinhados à marca Relp azul.
+  Hex/HSL só aqui — componentes usam classes semantic as (bg-primary, etc.).
 */
 
-:root {
-  /* Marca — azul Relp */
-  --relp-primary: 30 78 140;
-  --relp-primary-hover: 22 58 106;
-  --relp-primary-muted: 232 241 251;
-  --relp-primary-fg: 255 255 255;
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
 
-  /* Educação — verdes */
-  --relp-learn: 15 118 110;
-  --relp-learn-muted: 204 251 241;
-  --relp-done: 22 163 74;
-  --relp-done-muted: 220 252 231;
-  --relp-progress-track: 226 232 240;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-  /* Status de conteúdo */
-  --relp-status-draft: 217 119 6;
-  --relp-status-review: 37 99 235;
-  --relp-status-published: 22 163 74;
-  --relp-status-archived: 100 116 139;
-  --relp-status-locked: 148 163 184;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-  /* Feedback */
-  --relp-danger: 220 38 38;
-  --relp-danger-muted: 254 226 226;
-  --relp-warning: 217 119 6;
-  --relp-warning-muted: 254 243 199;
-  --relp-info: 37 99 235;
-  --relp-info-muted: 219 234 254;
-  --relp-notify: 124 58 237;
-  --relp-notify-unread: 220 38 38;
+    --primary: 213 65% 33%;
+    --primary-foreground: 0 0% 100%;
 
-  /* Superfície */
-  --relp-bg: 248 250 252;
-  --relp-fg: 15 23 42;
-  --relp-muted: 100 116 139;
-  --relp-surface: 255 255 255;
-  --relp-surface-raised: 255 255 255;
-  --relp-border: 226 232 240;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
 
-  /* Espaçamento (4 / 8 / 12 / 16 / 24) */
-  --relp-space-1: 0.25rem;
-  --relp-space-2: 0.5rem;
-  --relp-space-3: 0.75rem;
-  --relp-space-4: 1rem;
-  --relp-space-6: 1.5rem;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-  /* Raio */
-  --relp-radius-sm: 0.375rem;
-  --relp-radius-md: 0.5rem;
-  --relp-radius-lg: 0.75rem;
-}
+    --accent: 213 70% 95%;
+    --accent-foreground: 213 65% 33%;
 
-.dark {
-  --relp-primary: 91 155 213;
-  --relp-primary-hover: 126 179 227;
-  --relp-primary-muted: 26 51 84;
-  --relp-primary-fg: 11 18 32;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-  --relp-learn: 45 212 191;
-  --relp-learn-muted: 19 78 74;
-  --relp-done: 74 222 128;
-  --relp-done-muted: 20 83 45;
-  --relp-progress-track: 30 41 59;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 213 65% 33%;
 
-  --relp-status-draft: 217 119 6;
-  --relp-status-review: 91 155 213;
-  --relp-status-published: 74 222 128;
-  --relp-status-archived: 148 163 184;
-  --relp-status-locked: 100 116 139;
+    --radius: 0.5rem;
 
-  --relp-danger: 248 113 113;
-  --relp-danger-muted: 127 29 29;
-  --relp-warning: 251 191 36;
-  --relp-warning-muted: 120 53 15;
-  --relp-info: 96 165 250;
-  --relp-info-muted: 30 58 138;
-  --relp-notify: 167 139 250;
-  --relp-notify-unread: 248 113 113;
+    /* Legado Relp mock (páginas atuais) */
+    --relp-bg: 210 20% 98%;
+    --relp-fg: 222 47% 11%;
+  }
 
-  --relp-bg: 15 20 25;
-  --relp-fg: 230 237 243;
-  --relp-muted: 148 163 184;
-  --relp-surface: 22 27 34;
-  --relp-surface-raised: 22 27 34;
-  --relp-border: 48 54 61;
-}
+  .dark {
+    --background: 215 28% 7%;
+    --foreground: 210 40% 96%;
 
-body {
-  @apply bg-bg text-fg antialiased;
+    --card: 215 25% 11%;
+    --card-foreground: 210 40% 96%;
+
+    --popover: 215 25% 11%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 210 60% 60%;
+    --primary-foreground: 215 28% 7%;
+
+    --secondary: 215 25% 16%;
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 215 25% 16%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 215 30% 18%;
+    --accent-foreground: 210 60% 70%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 20% 22%;
+    --input: 215 20% 22%;
+    --ring: 210 60% 60%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
 }
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-relp-md bg-primary px-4 py-2 text-sm font-medium text-primary-fg transition hover:bg-primary-hover;
+    @apply inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-relp-md border border-border px-4 py-2 text-sm text-fg transition hover:border-primary hover:text-primary;
+    @apply inline-flex items-center justify-center rounded-md border border-border px-4 py-2 text-sm text-foreground transition hover:border-primary hover:text-primary;
   }
   .card {
-    @apply rounded-relp-lg border border-border bg-surface-raised p-5;
+    @apply rounded-xl border border-border bg-card p-5;
   }
 }
