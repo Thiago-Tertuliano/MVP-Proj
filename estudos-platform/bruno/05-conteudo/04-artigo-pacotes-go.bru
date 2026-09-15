@@ -1,0 +1,34 @@
+meta {
+  name: 04 Artigo Pacotes em Go
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/artigos/pacotes-em-go
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body && body.id) {
+    bru.setEnvVar("demoArtigoId", body.id); 
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.slug: eq pacotes-em-go
+  res.body.conteudo.blocks: isDefined
+  res.body.conteudo.blocks.length: gt 1
+}
+
+docs {
+  O Job deve ter lido o AULA-CODE-REVIEW-GO-SPRINT.md e populado os blocks. 
+  Salva o ID gerado em demoArtigoId para a etapa de publicação.
+}

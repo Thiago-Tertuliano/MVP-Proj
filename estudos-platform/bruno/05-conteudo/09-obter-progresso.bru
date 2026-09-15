@@ -1,0 +1,23 @@
+meta {
+  name: 09 Obter Progresso Trilha
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/v1/progresso/trilhas/22222222-2222-2222-2222-222222222222
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Verifica se a marcação de leitura do passo anterior atualizou a % de progresso da trilha go-basico.
+}

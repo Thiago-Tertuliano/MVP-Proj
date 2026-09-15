@@ -1,0 +1,26 @@
+meta {
+  name: 03 Trilha Go Basico
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/trilhas/go-basico
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.slug: eq go-basico
+  res.body.publicada: eq true
+  res.body.modulos.length: eq 2
+}
+
+docs {
+  Verifica se a trilha enriquecida pelo Job continua publicada e se contém exatamente os 2 módulos seed (sintaxe, interfaces).
+}

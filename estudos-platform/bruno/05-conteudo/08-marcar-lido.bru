@@ -1,0 +1,33 @@
+meta {
+  name: 08 Marcar Lido
+  type: http
+  seq: 8
+}
+
+put {
+  url: {{baseUrl}}/api/v1/progresso/artigos/{{demoArtigoId}}
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "concluido": true
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Registra o progresso do aluno no artigo que acabamos de publicar (início da validação da Sprint B).
+}
