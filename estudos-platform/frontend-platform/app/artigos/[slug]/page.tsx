@@ -2,16 +2,45 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArticleRenderer } from "@/components/relp/ArticleRenderer";
 import { QuizPanel } from "@/components/relp/QuizPanel";
-import { getArtigo, getTrilha } from "@/lib/mock-data";
+import type { Artigo, Trilha } from "@/lib/types";
 
 type Props = { params: { slug: string } };
 
-export default function ArtigoPage({ params }: Props) {
-  const artigo = getArtigo(params.slug);
+// Busca o artigo real da API Go
+async function getArtigo(slug: string): Promise<Artigo | null> {
+  try {
+    const res = await fetch(`http://localhost:8080/api/v1/artigos/${slug}`, {
+      cache: "no-store", 
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error("Falha ao buscar artigo");
+    return await res.json();
+  } catch (error) {
+    console.error("Erro na integração do artigo:", error);
+    return null;
+  }
+}
+
+// Busca a trilha real para montar o Breadcrumb (navegação de retorno)
+async function getTrilhaContext(slug?: string): Promise<Trilha | null> {
+  if (!slug) return null;
+  try {
+    const res = await fetch(`http://localhost:8080/api/v1/trilhas/${slug}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    return null;
+  }
+}
+
+export default async function ArtigoPage({ params }: Props) {
+  const artigo = await getArtigo(params.slug);
   if (!artigo) notFound();
 
-  const trilha = artigo.trilhaSlug ? getTrilha(artigo.trilhaSlug) : undefined;
-  const questoes = artigo.metadados.quiz?.questoes ?? [];
+  const trilha = await getTrilhaContext(artigo.trilhaSlug);
+  const questoes = artigo.metadados?.quiz?.questoes ?? [];
 
   return (
     <div className="space-y-8">
@@ -44,22 +73,22 @@ export default function ArtigoPage({ params }: Props) {
               >
                 {artigo.status}
               </span>
-              {artigo.metadados.origem && (
+              {artigo.metadados?.origem && (
                 <span className="text-xs text-muted-foreground">{artigo.metadados.origem}</span>
               )}
             </div>
             <h1 className="text-3xl font-bold text-fg">{artigo.titulo}</h1>
-            {artigo.metadados.objetivo && (
+            {artigo.metadados?.objetivo && (
               <p className="text-muted-foreground">{artigo.metadados.objetivo}</p>
             )}
-            {artigo.metadados.tempo_leitura_min && (
+            {artigo.metadados?.tempo_leitura_min && (
               <p className="text-xs text-muted-foreground">
                 ~{artigo.metadados.tempo_leitura_min} min de leitura
               </p>
             )}
           </header>
 
-          <ArticleRenderer blocks={artigo.conteudo.blocks} />
+          <ArticleRenderer blocks={artigo.conteudo?.blocks || []} />
 
           <footer className="flex flex-wrap gap-3 border-t border-border pt-6">
             {trilha && (
