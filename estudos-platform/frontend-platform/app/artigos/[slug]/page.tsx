@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArticleRenderer } from "@/components/relp/ArticleRenderer";
 import { QuizPanel } from "@/components/relp/QuizPanel";
+import { ArticleActions } from "@/components/relp/ArticleActions";
 import type { Artigo, Trilha } from "@/lib/types";
 
 type Props = { params: { slug: string } };
@@ -90,16 +91,8 @@ export default async function ArtigoPage({ params }: Props) {
 
           <ArticleRenderer blocks={artigo.conteudo?.blocks || []} />
 
-          <footer className="flex flex-wrap gap-3 border-t border-border pt-6">
-            {trilha && (
-              <Link href={`/trilhas/${trilha.slug}`} className="btn-ghost">
-                Voltar ao mapa
-              </Link>
-            )}
-            <button type="button" className="btn-primary">
-              Marcar como lido
-            </button>
-          </footer>
+          {/* O nosso novo componente interativo entra exatamente aqui, fechando o artigo */}
+          <ArticleActions artigoId={artigo.id} trilhaSlug={trilha?.slug} />
         </article>
 
         {questoes.length > 0 && <QuizPanel questoes={questoes} />}
