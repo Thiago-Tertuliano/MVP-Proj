@@ -31,7 +31,8 @@ async function getTrilhaContext(slug?: string): Promise<Trilha | null> {
     });
     if (!res.ok) return null;
     return await res.json();
-  } catch (error) {
+  } catch {
+    // Retirado o (error) daqui para o ESLint não reclamar
     return null;
   }
 }
