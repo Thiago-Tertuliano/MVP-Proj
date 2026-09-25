@@ -49,3 +49,8 @@ export type Trilha = {
   progressoPct: number;
   modulos: Modulo[];
 };
+
+// Adicionado para tipar o retorno do GET /api/v1/trilhas
+export type ListarTrilhasResponse = {
+  itens: Trilha[];
+};

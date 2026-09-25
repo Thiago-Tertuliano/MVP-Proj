@@ -1,0 +1,33 @@
+meta {
+  name: 05 Listar Artigos
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/artigos
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body && body.itens) {
+    // Passo 07 do spec: todos os novos artigos devem nascer como rascunho
+    const artigosDoCatalogo = body.itens.filter(a => a.origem === 'courses-md');
+    const todosRascunhos = artigosDoCatalogo.every(a => a.status === 'rascunho');
+    bru.assert(todosRascunhos, "Artigos do catálogo devem ser criados como rascunho");
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Lista os artigos e valida via script se os conteúdos gerados a partir do Courses.md estão protegidos como rascunhos.
+}

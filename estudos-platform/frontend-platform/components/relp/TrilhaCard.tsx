@@ -4,11 +4,17 @@ import type { Trilha } from "@/lib/types";
 type Props = { trilha: Trilha };
 
 export function TrilhaCard({ trilha }: Props) {
-  const totalArtigos = trilha.modulos.reduce((n, m) => n + m.artigos.length, 0);
-  const concluidos = trilha.modulos.reduce(
-    (n, m) => n + m.artigos.filter((a) => a.concluido).length,
+  // Segurança caso modulos venha undefined/null da API
+  const modulos = trilha.modulos || [];
+  
+  const totalArtigos = modulos.reduce((n, m) => n + (m.artigos?.length || 0), 0);
+  const concluidos = modulos.reduce(
+    (n, m) => n + (m.artigos?.filter((a) => a.concluido).length || 0),
     0,
   );
+
+  // Garante que o progresso é um número válido para o width da barra
+  const progresso = trilha.progressoPct || 0;
 
   return (
     <article className="card flex flex-col gap-4 transition hover:border-primary/40">
@@ -18,19 +24,19 @@ export function TrilhaCard({ trilha }: Props) {
           <p className="mt-1 text-sm text-muted-foreground">{trilha.descricao}</p>
         </div>
         <span className="shrink-0 rounded-full bg-done-muted px-2.5 py-0.5 text-xs font-medium text-done">
-          {trilha.progressoPct}%
+          {progresso}%
         </span>
       </div>
 
       <div className="h-1.5 overflow-hidden rounded-full bg-progress-track">
         <div
           className="h-full rounded-full bg-done transition-all"
-          style={{ width: `${trilha.progressoPct}%` }}
+          style={{ width: `${progresso}%` }}
         />
       </div>
 
       <p className="text-xs text-muted-foreground">
-        {concluidos} / {totalArtigos} nós lidos · {trilha.modulos.length} módulos
+        {concluidos} / {totalArtigos} nós lidos · {modulos.length} módulos
       </p>
 
       <Link href={`/trilhas/${trilha.slug}`} className="btn-primary w-fit">

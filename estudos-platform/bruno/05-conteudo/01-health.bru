@@ -1,0 +1,19 @@
+meta {
+  name: 01 Health
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/health
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Garante que a API está de pé antes de testar a esteira do Job de Conteúdo.
+}
