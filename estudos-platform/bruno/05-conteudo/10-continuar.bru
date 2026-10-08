@@ -1,0 +1,25 @@
+meta {
+  name: 10 Continuar de onde parou
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/v1/progresso/continuar
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Devolve o último artigo com que o aluno interagiu (`item` nulo se ainda não estudou nada).
+  Alimenta o card "Continuar" da home do front. O GET /progresso/trilhas/{id} agora também
+  traz `artigos_concluidos` (IDs lidos) para pintar o mapa da trilha.
+}

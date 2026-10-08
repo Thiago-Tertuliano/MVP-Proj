@@ -38,11 +38,11 @@ func NewAnotacaoHandler(salvar SalvarAnotacaoUseCase, obter ObterAnotacaoUseCase
 func (h *AnotacaoHandler) Salvar(w http.ResponseWriter, r *http.Request) {
 	var req dto.SalvarAnotacaoRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		h.escreverJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+		h.escreverJSON(w, http.StatusBadRequest, map[string]string{"erro": "corpo da requisição inválido"})
 		return
 	}
 	if err := h.validate.Struct(req); err != nil {
-		h.escreverJSON(w, http.StatusBadRequest, map[string]string{"error": "validation failed"})
+		h.escreverJSON(w, http.StatusBadRequest, map[string]string{"erro": "conteúdo da anotação é obrigatório"})
 		return
 	}
 

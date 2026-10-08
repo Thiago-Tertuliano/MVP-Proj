@@ -100,11 +100,12 @@ func (r *ArtigoRepoPG) ListPublicados(ctx context.Context, limit, offset int) ([
 
 func (r *ArtigoRepoPG) ListarPorTrilha(ctx context.Context, trilhaID uuid.UUID) ([]*entity.Artigo, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT id, slug, titulo, subtitulo, capa_url, conteudo, metadados,
-		       autor_id, status, publicado_em, created_at, updated_at, trilha_id, modulo_id
-		FROM artigos 
-		WHERE trilha_id = $1
-		ORDER BY created_at ASC
+		SELECT a.id, a.slug, a.titulo, a.subtitulo, a.capa_url, a.conteudo, a.metadados,
+		       a.autor_id, a.status, a.publicado_em, a.created_at, a.updated_at, a.trilha_id, a.modulo_id
+		FROM artigos a
+		LEFT JOIN modulos m ON m.id = a.modulo_id
+		WHERE a.trilha_id = $1
+		ORDER BY COALESCE(m.ordem, 0) ASC, a.created_at ASC, a.slug ASC
 	`, trilhaID)
 	if err != nil {
 		return nil, err

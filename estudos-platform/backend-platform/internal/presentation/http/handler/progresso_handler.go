@@ -20,13 +20,18 @@ type ObterProgressoTrilhaUseCase interface {
 	Execute(ctx context.Context, usuarioID, trilhaID string) (*dto.ProgressoTrilhaResponse, error)
 }
 
-type ProgressoHandler struct {
-	marcar MarcarArtigoLidoUseCase
-	obter  ObterProgressoTrilhaUseCase
+type ObterContinuarUseCase interface {
+	Execute(ctx context.Context, usuarioID string) (*dto.ContinuarResponse, error)
 }
 
-func NewProgressoHandler(marcar MarcarArtigoLidoUseCase, obter ObterProgressoTrilhaUseCase) *ProgressoHandler {
-	return &ProgressoHandler{marcar: marcar, obter: obter}
+type ProgressoHandler struct {
+	marcar    MarcarArtigoLidoUseCase
+	obter     ObterProgressoTrilhaUseCase
+	continuar ObterContinuarUseCase
+}
+
+func NewProgressoHandler(marcar MarcarArtigoLidoUseCase, obter ObterProgressoTrilhaUseCase, continuar ObterContinuarUseCase) *ProgressoHandler {
+	return &ProgressoHandler{marcar: marcar, obter: obter, continuar: continuar}
 }
 
 func (h *ProgressoHandler) MarcarArtigo(w http.ResponseWriter, r *http.Request) {
@@ -51,6 +56,17 @@ func (h *ProgressoHandler) ObterTrilha(w http.ResponseWriter, r *http.Request) {
 	usuarioID, _ := r.Context().Value(middleware.CtxUsuarioID).(string)
 	trilhaID := chi.URLParam(r, "id")
 	resp, err := h.obter.Execute(r.Context(), usuarioID, trilhaID)
+	if err != nil {
+		h.escreverErro(w, err)
+		return
+	}
+	h.escreverJSON(w, http.StatusOK, resp)
+}
+
+// Continuar devolve o último artigo estudado pelo aluno (item nulo se não houver).
+func (h *ProgressoHandler) Continuar(w http.ResponseWriter, r *http.Request) {
+	usuarioID, _ := r.Context().Value(middleware.CtxUsuarioID).(string)
+	resp, err := h.continuar.Execute(r.Context(), usuarioID)
 	if err != nil {
 		h.escreverErro(w, err)
 		return

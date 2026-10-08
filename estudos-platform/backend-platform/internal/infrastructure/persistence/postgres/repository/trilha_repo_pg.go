@@ -49,16 +49,28 @@ func (r *TrilhaRepoPG) Save(ctx context.Context, t *entity.Trilha) error {
 		return err
 	}
 
-	if _, err := tx.Exec(ctx, `DELETE FROM modulos WHERE trilha_id = $1`, t.ID()); err != nil {
-		return err
-	}
+	// Upsert (e não DELETE + INSERT): artigos.modulo_id é ON DELETE SET NULL, então
+	// apagar os módulos a cada Save (ex.: ao publicar a trilha) desvincularia os artigos.
+	manter := make([]string, 0, len(t.Modulos()))
 	for _, m := range t.Modulos() {
+		manter = append(manter, m.ID().String())
 		if _, err := tx.Exec(ctx, `
 			INSERT INTO modulos (id, trilha_id, slug, titulo, descricao, ordem, created_at)
 			VALUES ($1,$2,$3,$4,$5,$6,$7)
+			ON CONFLICT (id) DO UPDATE SET
+				slug = EXCLUDED.slug,
+				titulo = EXCLUDED.titulo,
+				descricao = EXCLUDED.descricao,
+				ordem = EXCLUDED.ordem
 		`, m.ID(), t.ID(), m.Slug().Value(), m.Titulo(), nullStr(m.Descricao()), m.Ordem(), m.CreatedAt()); err != nil {
 			return err
 		}
+	}
+	if _, err := tx.Exec(ctx,
+		`DELETE FROM modulos WHERE trilha_id = $1 AND id <> ALL($2::uuid[])`,
+		t.ID(), manter,
+	); err != nil {
+		return err
 	}
 
 	return tx.Commit(ctx)
