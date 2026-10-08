@@ -114,6 +114,9 @@ jobs:
       - name: TypeScript (tsc --noEmit)
         run: npm run typecheck
 
+      - name: Testes unitários (vitest)
+        run: npm test
+
   build:
     name: build
     needs: [lint, typecheck]
@@ -137,6 +140,9 @@ jobs:
         run: npm run build
         env:
           NEXT_PUBLIC_API_URL: ${{ env.NEXT_PUBLIC_API_URL }}
+
+      - name: Storybook build (stories compilam)
+        run: npm run build-storybook
 
       - name: Build summary
         run: |
