@@ -3,5 +3,24 @@
     "next/core-web-vitals",
     "next/typescript",
     "plugin:storybook/recommended"
+  ],
+  "overrides": [
+    {
+      "files": ["app/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}", "components/**/*.{ts,tsx}"],
+      "excludedFiles": ["**/*.stories.{ts,tsx}", "**/*.test.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["**/stories/**", "@/stories/**"],
+                "message": "Dados de exemplo (stories/fixtures) são só para Storybook. O app consome a API via lib/content.ts."
+              }
+            ]
+          }
+        ]
+      }
+    }
   ]
 }

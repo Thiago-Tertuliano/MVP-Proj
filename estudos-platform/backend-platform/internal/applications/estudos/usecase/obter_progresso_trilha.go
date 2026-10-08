@@ -28,11 +28,15 @@ func (uc *ObterProgressoTrilha) Execute(ctx context.Context, usuarioID, trilhaID
 
 	concluidos, total, err := uc.progresso.CountConcluidosNaTrilha(ctx, usuarioID, trilhaID)
 	if err != nil {
-		var de *errors.DomainError
-		if stderrors.As(err, &de) {
-			return nil, err
-		}
-		return nil, errors.ErrInternal("falha ao calcular progresso", "ObterProgressoTrilha.Execute", err)
+		return nil, uc.mapErr(err, "falha ao calcular progresso")
+	}
+
+	ids, err := uc.progresso.ListarConcluidosNaTrilha(ctx, usuarioID, trilhaID)
+	if err != nil {
+		return nil, uc.mapErr(err, "falha ao listar artigos concluídos")
+	}
+	if ids == nil {
+		ids = []string{}
 	}
 
 	pct := 0.0
@@ -40,9 +44,18 @@ func (uc *ObterProgressoTrilha) Execute(ctx context.Context, usuarioID, trilhaID
 		pct = float64(concluidos) / float64(total) * 100
 	}
 	return &dto.ProgressoTrilhaResponse{
-		TrilhaID:   trilhaID,
-		Concluidos: concluidos,
-		Total:      total,
-		Percentual: pct,
+		TrilhaID:          trilhaID,
+		Concluidos:        concluidos,
+		Total:             total,
+		Percentual:        pct,
+		ArtigosConcluidos: ids,
 	}, nil
+}
+
+func (uc *ObterProgressoTrilha) mapErr(err error, msg string) error {
+	var de *errors.DomainError
+	if stderrors.As(err, &de) {
+		return err
+	}
+	return errors.ErrInternal(msg, "ObterProgressoTrilha.Execute", err)
 }

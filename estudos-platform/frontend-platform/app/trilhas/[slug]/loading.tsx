@@ -1,0 +1,16 @@
+import { Skeleton } from "@/components/ui/skeleton";
+
+export default function TrilhaLoading() {
+  return (
+    <div className="space-y-6" role="status" aria-label="Carregando trilha">
+      <Skeleton className="h-5 w-48" />
+      <div className="space-y-3">
+        <Skeleton className="h-9 w-72" />
+        <Skeleton className="h-5 w-full max-w-xl" />
+      </div>
+      <Skeleton className="h-16 w-full rounded-xl" />
+      <Skeleton className="h-64 w-full rounded-xl" />
+      <span className="sr-only">Carregando…</span>
+    </div>
+  );
+}

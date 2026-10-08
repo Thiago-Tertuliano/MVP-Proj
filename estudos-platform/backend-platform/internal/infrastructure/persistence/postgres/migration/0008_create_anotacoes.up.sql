@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS anotacoes (
       artigo_id UUID NOT NULL REFERENCES artigos(id) ON DELETE CASCADE,
       conteudo JSONB NOT NULL DEFAULT '{}',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       UNIQUE (usuario_id, artigo_id)
 );
 

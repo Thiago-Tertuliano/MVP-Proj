@@ -1,102 +1,122 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Clock } from "lucide-react";
+
+import { ArticleNotes } from "@/components/relp/ArticleNotes";
+import { ArticlePager } from "@/components/relp/ArticlePager";
+import { ArticleProgress } from "@/components/relp/ArticleProgress";
 import { ArticleRenderer } from "@/components/relp/ArticleRenderer";
 import { QuizPanel } from "@/components/relp/QuizPanel";
-import { ArticleActions } from "@/components/relp/ArticleActions";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { listarArtigosDaTrilha, listarTrilhas, obterArtigo } from "@/lib/content";
+import { artigosEmOrdem, vizinhos } from "@/lib/roadmap";
 import type { Artigo, Trilha } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
 
 type Props = { params: { slug: string } };
 
-// Busca o artigo real da API Go
-async function getArtigo(slug: string): Promise<Artigo | null> {
-  try {
-    const res = await fetch(`http://localhost:8080/api/v1/artigos/${slug}`, {
-      cache: "no-store", 
-    });
-    if (res.status === 404) return null;
-    if (!res.ok) throw new Error("Falha ao buscar artigo");
-    return await res.json();
-  } catch (error) {
-    console.error("Erro na integração do artigo:", error);
-    return null;
-  }
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const artigo = await obterArtigo(params.slug).catch(() => null);
+  return { title: artigo?.titulo ?? "Artigo" };
 }
 
-// Busca a trilha real para montar o Breadcrumb (navegação de retorno)
-async function getTrilhaContext(slug?: string): Promise<Trilha | null> {
-  if (!slug) return null;
+/** Contexto da trilha (breadcrumb + anterior/próximo). Falha aqui não derruba a leitura do artigo. */
+async function contextoDaTrilha(artigo: Artigo): Promise<{ trilha: Trilha; ordenados: Artigo[] } | null> {
+  if (!artigo.trilha_id) return null;
   try {
-    const res = await fetch(`http://localhost:8080/api/v1/trilhas/${slug}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    return await res.json();
+    const trilhas = await listarTrilhas();
+    const trilha = trilhas.find((t) => t.id === artigo.trilha_id);
+    if (!trilha) return null;
+    const artigos = await listarArtigosDaTrilha(trilha.slug);
+    return { trilha, ordenados: artigosEmOrdem(trilha, artigos) };
   } catch {
-    // Retirado o (error) daqui para o ESLint não reclamar
     return null;
   }
 }
 
 export default async function ArtigoPage({ params }: Props) {
-  const artigo = await getArtigo(params.slug);
+  const artigo = await obterArtigo(params.slug);
   if (!artigo) notFound();
 
-  const trilha = await getTrilhaContext(artigo.trilhaSlug);
+  const contexto = await contextoDaTrilha(artigo);
+  const { anterior, proximo } = contexto
+    ? vizinhos(contexto.ordenados, artigo.slug)
+    : { anterior: null, proximo: null };
   const questoes = artigo.metadados?.quiz?.questoes ?? [];
+  const blocks = artigo.conteudo?.blocks ?? [];
 
   return (
     <div className="space-y-8">
-      <nav className="text-sm text-muted-foreground">
-        <Link href="/" className="hover:text-primary">
-          Trilhas
-        </Link>
-        {trilha && (
-          <>
-            <span className="mx-2">/</span>
-            <Link href={`/trilhas/${trilha.slug}`} className="hover:text-primary">
-              {trilha.titulo}
-            </Link>
-          </>
-        )}
-        <span className="mx-2">/</span>
-        <span className="text-fg">{artigo.titulo}</span>
-      </nav>
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/">Trilhas</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          {contexto && (
+            <>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href={`/trilhas/${contexto.trilha.slug}`}>{contexto.trilha.titulo}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+            </>
+          )}
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{artigo.titulo}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
-        <article className="space-y-6">
-          <header className="space-y-2 border-b border-border pb-6">
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                  artigo.status === "publicado"
-                    ? "bg-status-published/15 text-status-published"
-                    : "bg-status-draft/15 text-status-draft"
-                }`}
-              >
-                {artigo.status}
-              </span>
-              {artigo.metadados?.origem && (
-                <span className="text-xs text-muted-foreground">{artigo.metadados.origem}</span>
-              )}
-            </div>
-            <h1 className="text-3xl font-bold text-fg">{artigo.titulo}</h1>
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <article className="min-w-0 space-y-8">
+          <header className="space-y-3 border-b border-border pb-6">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">{artigo.titulo}</h1>
+            {artigo.subtitulo && <p className="text-lg text-muted-foreground">{artigo.subtitulo}</p>}
             {artigo.metadados?.objetivo && (
-              <p className="text-muted-foreground">{artigo.metadados.objetivo}</p>
-            )}
-            {artigo.metadados?.tempo_leitura_min && (
-              <p className="text-xs text-muted-foreground">
-                ~{artigo.metadados.tempo_leitura_min} min de leitura
+              <p className="text-muted-foreground">
+                <span className="font-medium text-foreground">Objetivo: </span>
+                {artigo.metadados.objetivo}
               </p>
             )}
+            {artigo.metadados?.tempo_leitura_min ? (
+              <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" aria-hidden="true" />
+                {artigo.metadados.tempo_leitura_min} min de leitura
+              </p>
+            ) : null}
           </header>
 
-          <ArticleRenderer blocks={artigo.conteudo?.blocks || []} />
+          <ArticleRenderer blocks={blocks} />
 
-          {/* O nosso novo componente interativo entra exatamente aqui, fechando o artigo */}
-          <ArticleActions artigoId={artigo.id} trilhaSlug={trilha?.slug} />
+          <section aria-label="Seu progresso neste artigo" className="space-y-4 border-t border-border pt-6">
+            <ArticleProgress
+              key={artigo.id}
+              artigoId={artigo.id}
+              artigoSlug={artigo.slug}
+              trilhaId={artigo.trilha_id}
+              ordenados={contexto?.ordenados ?? []}
+            />
+            {contexto && <ArticlePager anterior={anterior} proximo={proximo} />}
+          </section>
         </article>
 
-        {questoes.length > 0 && <QuizPanel questoes={questoes} />}
+        <aside aria-label="Estudo" className="min-w-0 space-y-6 lg:sticky lg:top-24 lg:self-start">
+          <ArticleNotes key={artigo.id} artigoId={artigo.id} />
+          <QuizPanel questoes={questoes} />
+        </aside>
       </div>
     </div>
   );

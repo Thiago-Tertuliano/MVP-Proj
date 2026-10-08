@@ -86,6 +86,14 @@ type MockArtigoRepository struct {
 	SlugExisteFn         func(ctx context.Context, slug valueobject.Slug) (bool, error)
 	AtualizarEmbeddingFn func(ctx context.Context, id string, embedding []float32) error
 	BuscarPublicadosFn   func(ctx context.Context, q string, limit int) ([]repository.ResultadoBusca, error)
+	ListarPorTrilhaFn    func(ctx context.Context, trilhaID uuid.UUID) ([]*entity.Artigo, error)
+}
+
+func (m *MockArtigoRepository) ListarPorTrilha(ctx context.Context, trilhaID uuid.UUID) ([]*entity.Artigo, error) {
+	if m.ListarPorTrilhaFn != nil {
+		return m.ListarPorTrilhaFn(ctx, trilhaID)
+	}
+	return nil, nil
 }
 
 func (m *MockArtigoRepository) Save(ctx context.Context, a *entity.Artigo) error {

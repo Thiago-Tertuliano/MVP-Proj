@@ -40,7 +40,6 @@ const config: Config = {
         accent: {
           DEFAULT: hsl("--accent"),
           foreground: hsl("--accent-foreground"),
-          muted: hsl("--accent"),
         },
         popover: {
           DEFAULT: hsl("--popover"),
@@ -50,7 +49,7 @@ const config: Config = {
           DEFAULT: hsl("--card"),
           foreground: hsl("--card-foreground"),
         },
-        /* Relp — educação / status / feedback */
+        /* Relp — educação / status / feedback (sufixo `fg` = texto sobre *-muted, contraste AA) */
         learn: {
           DEFAULT: hsl("--relp-learn"),
           muted: hsl("--relp-learn-muted"),
@@ -58,6 +57,7 @@ const config: Config = {
         done: {
           DEFAULT: hsl("--relp-done"),
           muted: hsl("--relp-done-muted"),
+          fg: hsl("--relp-done-fg"),
         },
         "progress-track": hsl("--relp-progress-track"),
         status: {
@@ -70,28 +70,22 @@ const config: Config = {
         danger: {
           DEFAULT: hsl("--relp-danger"),
           muted: hsl("--relp-danger-muted"),
+          fg: hsl("--relp-danger-fg"),
         },
         warning: {
           DEFAULT: hsl("--relp-warning"),
           muted: hsl("--relp-warning-muted"),
+          fg: hsl("--relp-warning-fg"),
         },
         info: {
           DEFAULT: hsl("--relp-info"),
           muted: hsl("--relp-info-muted"),
+          fg: hsl("--relp-info-fg"),
         },
         notify: {
           DEFAULT: hsl("--relp-notify"),
           unread: hsl("--relp-notify-unread"),
         },
-        /* Aliases de superfície (mock / páginas) */
-        bg: hsl("--background"),
-        fg: hsl("--foreground"),
-        surface: {
-          DEFAULT: hsl("--card"),
-          raised: hsl("--card"),
-          border: hsl("--border"),
-        },
-        success: hsl("--relp-done"),
       },
       spacing: {
         "relp-1": "var(--relp-space-1)",

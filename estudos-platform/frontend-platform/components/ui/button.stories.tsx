@@ -1,31 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { Loader2, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
 const meta = {
   title: "UI/Button",
   component: Button,
-  parameters: {
-    layout: "centered",
-  },
-  tags: ["autodocs"],
+  args: { children: "Continuar" },
   argTypes: {
-    variant: {
-      control: "select",
-      options: ["default", "secondary", "outline", "ghost", "link", "destructive"],
-    },
-    size: {
-      control: "select",
-      options: ["default", "sm", "lg", "icon"],
-    },
-    disabled: { control: "boolean" },
-  },
-  args: {
-    children: "Continuar",
-    variant: "default",
-    size: "default",
-    disabled: false,
+    variant: { control: "select", options: ["default", "secondary", "outline", "ghost", "link", "destructive", "success"] },
+    size: { control: "select", options: ["default", "sm", "lg", "icon"] },
   },
 } satisfies Meta<typeof Button>;
 
@@ -33,58 +17,41 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
-
-export const Secondary: Story = {
-  args: { variant: "secondary", children: "Secundário" },
-};
-
-export const Outline: Story = {
-  args: { variant: "outline", children: "Outline" },
-};
-
-export const Ghost: Story = {
-  args: { variant: "ghost", children: "Ghost" },
-};
-
-export const Destructive: Story = {
-  args: { variant: "destructive", children: "Excluir" },
-};
-
-export const Small: Story = {
-  args: { size: "sm", children: "Pequeno" },
-};
-
-export const Large: Story = {
-  args: { size: "lg", children: "Grande" },
-};
-
+export const Hover: Story = { parameters: { pseudo: { hover: true } } };
+export const Focus: Story = { parameters: { pseudo: { focusVisible: true } } };
+export const Disabled: Story = { args: { disabled: true } };
+export const Loading: Story = { args: { loading: true, children: "Salvando…" } };
+export const Success: Story = { args: { variant: "success", children: "Lido" } };
+export const Destructive: Story = { args: { variant: "destructive", children: "Excluir" } };
 export const WithIcon: Story = {
-  args: {
-    children: (
-      <>
+  args: { children: (<><Mail />Enviar e-mail</>) },
+};
+
+export const Variantes: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button>Primário</Button>
+      <Button variant="secondary">Secundário</Button>
+      <Button variant="outline">Outline</Button>
+      <Button variant="ghost">Ghost</Button>
+      <Button variant="link">Link</Button>
+      <Button variant="destructive">Destrutivo</Button>
+      <Button variant="success">Sucesso</Button>
+    </div>
+  ),
+};
+
+export const Tamanhos: Story = {
+  render: () => (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button size="sm">Pequeno</Button>
+      <Button>Padrão</Button>
+      <Button size="lg">Grande</Button>
+      <Button size="icon" aria-label="Enviar e-mail">
         <Mail />
-        Entrar com e-mail
-      </>
-    ),
-  },
+      </Button>
+    </div>
+  ),
 };
 
-export const Loading: Story = {
-  args: {
-    disabled: true,
-    children: (
-      <>
-        <Loader2 className="animate-spin" />
-        Salvando…
-      </>
-    ),
-  },
-};
-
-export const IconOnly: Story = {
-  args: {
-    size: "icon",
-    "aria-label": "Enviar e-mail",
-    children: <Mail />,
-  },
-};
+export const Escuro: Story = { ...Variantes, globals: { theme: "dark" } };

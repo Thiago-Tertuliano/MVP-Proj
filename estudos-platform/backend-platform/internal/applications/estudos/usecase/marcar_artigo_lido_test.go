@@ -22,6 +22,14 @@ func (m *mockProgressoRepo) CountConcluidosNaTrilha(context.Context, string, str
 	return 0, 0, nil
 }
 
+func (m *mockProgressoRepo) ListarConcluidosNaTrilha(context.Context, string, string) ([]string, error) {
+	return nil, nil
+}
+
+func (m *mockProgressoRepo) UltimoArtigo(context.Context, string) (*repository.UltimoProgresso, error) {
+	return nil, nil
+}
+
 func TestMarcarArtigoLido_Sucesso(t *testing.T) {
 	artigoID := uuid.New().String()
 	userID := uuid.New().String()

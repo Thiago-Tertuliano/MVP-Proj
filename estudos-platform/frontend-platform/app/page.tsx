@@ -1,73 +1,48 @@
-import { TrilhaCard } from "@/components/relp/TrilhaCard";
-import type { ListarTrilhasResponse, Trilha } from "@/lib/types";
+import { Map } from "lucide-react";
 
-// Função para buscar os dados reais da API
-async function getTrilhas(): Promise<Trilha[]> {
-  try {
-    const res = await fetch("http://localhost:8080/api/v1/trilhas", {
-      cache: "no-store", // Garante que a tela atualize logo após rodar o content-job
-    });
-    
-    if (!res.ok) throw new Error("Falha ao buscar trilhas da API");
-    
-    const data: ListarTrilhasResponse = await res.json();
-    return data.itens || [];
-  } catch (error) {
-    console.error("Erro na integração:", error);
-    return [];
-  }
-}
+import { ContinueSection } from "@/components/relp/ContinueSection";
+import { TrilhaCardConnected } from "@/components/relp/TrilhaCardConnected";
+import { EmptyState } from "@/components/ui/empty-state";
+import { listarTrilhas } from "@/lib/content";
+
+// Dados vivos da API: sem cache estático (o layout já depende de sessão no cliente).
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const todasTrilhas = await getTrilhas();
-  
-  // Filtra as trilhas baseadas no status que vem do banco
-  const publicadas = todasTrilhas.filter((t) => t.publicada);
-  const rascunhos = todasTrilhas.filter((t) => !t.publicada);
+  // Falha de rede/5xx propaga para app/error.tsx (estado de erro com "Tentar de novo").
+  const trilhas = await listarTrilhas();
 
   return (
     <div className="space-y-8">
       <header className="space-y-2">
-        <p className="text-sm font-medium uppercase tracking-wider text-primary">MVP · leitura</p>
-        <h1 className="text-3xl font-bold tracking-tight text-fg">Suas trilhas</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Trilhas de estudo</h1>
         <p className="max-w-2xl text-muted-foreground">
-          Mapa estilo roadmap: módulos como regiões, artigos como nós. Dados integrados 
-          diretamente com a API em Go.
+          Siga um mapa de módulos e artigos, marque o que já leu e continue de onde parou.
         </p>
       </header>
 
-      <section className="space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Publicadas
+      <ContinueSection />
+
+      <section aria-labelledby="trilhas-titulo" className="space-y-4">
+        <h2 id="trilhas-titulo" className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Trilhas disponíveis
         </h2>
-        {publicadas.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Nenhuma trilha publicada no momento.
-          </p>
+        {trilhas.length === 0 ? (
+          <EmptyState
+            icon={<Map />}
+            title="Nenhuma trilha publicada ainda"
+            description="Assim que novas trilhas forem publicadas, elas aparecem aqui. Volte em breve!"
+          />
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {publicadas.map((trilha) => (
-              <TrilhaCard key={trilha.slug} trilha={trilha} />
+          <ul className="grid gap-4 md:grid-cols-2">
+            {trilhas.map((trilha) => (
+              <li key={trilha.id}>
+                <TrilhaCardConnected trilha={trilha} />
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </section>
-
-      {rascunhos.length > 0 && (
-        <section className="space-y-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            No banco, ainda não públicas
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Após o content-job, trilhas como Dados nascem rascunho até o Bruno publicar pela API.
-          </p>
-          <div className="grid gap-4 opacity-60 md:grid-cols-2">
-            {rascunhos.map((trilha) => (
-              <TrilhaCard key={trilha.slug} trilha={trilha} />
-            ))}
-          </div>
-        </section>
-      )}
     </div>
   );
 }
