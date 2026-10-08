@@ -1,60 +1,61 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { RoadmapMap } from "@/components/relp/RoadmapMap";
-import type { Trilha } from "@/lib/types";
+
+import { TrilhaRoadmap } from "@/components/relp/TrilhaRoadmap";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { EmptyState } from "@/components/ui/empty-state";
+import { listarArtigosDaTrilha, obterTrilha } from "@/lib/content";
+import Link from "next/link";
+
+export const dynamic = "force-dynamic";
 
 type Props = { params: { slug: string } };
 
-async function getTrilha(slug: string): Promise<Trilha | null> {
-  try {
-    const res = await fetch(`http://localhost:8080/api/v1/trilhas/${slug}`, {
-      cache: "no-store", // Sempre busca atualizado para refletir o progresso
-    });
-    
-    if (res.status === 404) return null;
-    if (!res.ok) throw new Error("Falha ao buscar trilha detalhada");
-    
-    return await res.json();
-  } catch (error) {
-    console.error("Erro na integração:", error);
-    return null;
-  }
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const trilha = await obterTrilha(params.slug).catch(() => null);
+  return { title: trilha?.titulo ?? "Trilha" };
 }
 
 export default async function TrilhaPage({ params }: Props) {
-  const trilha = await getTrilha(params.slug);
+  const trilha = await obterTrilha(params.slug);
   if (!trilha) notFound();
 
-  const progresso = trilha.progressoPct || 0;
+  const artigos = await listarArtigosDaTrilha(params.slug);
 
   return (
     <div className="space-y-6">
-      <nav className="text-sm text-muted-foreground">
-        <Link href="/" className="hover:text-primary">
-          Trilhas
-        </Link>
-        <span className="mx-2">/</span>
-        <span className="text-fg">{trilha.titulo}</span>
-      </nav>
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/">Trilhas</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{trilha.titulo}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
-      <header className="space-y-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold text-fg">{trilha.titulo}</h1>
-          <span className="rounded-full bg-done-muted px-2.5 py-0.5 text-xs font-medium text-done">
-            {progresso}% concluído
-          </span>
-        </div>
-        <p className="text-muted-foreground">{trilha.descricao}</p>
-        <div className="h-2 max-w-md overflow-hidden rounded-full bg-progress-track">
-          <div
-            className="h-full rounded-full bg-done"
-            style={{ width: `${progresso}%` }}
-          />
-        </div>
+      <header className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">{trilha.titulo}</h1>
+        {trilha.descricao && <p className="max-w-2xl text-muted-foreground">{trilha.descricao}</p>}
       </header>
 
-      {/* Como RoadmapMap deve ler os módulos, certifique-se que trilha.modulos é passado */}
-      <RoadmapMap trilha={{...trilha, modulos: trilha.modulos || []}} />
+      {artigos.length === 0 ? (
+        <EmptyState
+          title="Esta trilha ainda não tem artigos publicados"
+          description="Os artigos aparecem aqui assim que forem publicados."
+          action={
+            <Link href="/" className="text-sm font-medium text-primary underline-offset-4 hover:underline">
+              Voltar para as trilhas
+            </Link>
+          }
+        />
+      ) : (
+        <TrilhaRoadmap trilha={trilha} artigos={artigos} />
+      )}
     </div>
   );
 }

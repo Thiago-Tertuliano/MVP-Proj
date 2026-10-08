@@ -11,6 +11,8 @@ const config: StorybookConfig = {
     "@storybook/addon-a11y",
     "@storybook/addon-themes",
     "@storybook/addon-interactions",
+    // Estados :hover / :focus / :active em stories (parameters.pseudo).
+    "storybook-addon-pseudo-states",
   ],
   framework: {
     name: "@storybook/nextjs",
