@@ -79,7 +79,13 @@ export type ListaArtigos = { itens: Artigo[] };
 
 /* ------------------------------------------------------------------ aluno */
 
-export type Usuario = { id: string; nome: string; email: string };
+export type Usuario = {
+  id: string;
+  nome: string;
+  email: string;
+  /** Só `GET /auth/me` informa o papel; login/registro omitem. `editor` pode criar roadmaps. */
+  papel?: "aluno" | "editor";
+};
 
 export type AuthResposta = {
   tokens: { access_token: string; refresh_token: string; expiracao_em: number };
