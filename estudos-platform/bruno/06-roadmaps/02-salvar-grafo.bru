@@ -1,0 +1,50 @@
+meta {
+  name: Salvar grafo do Roadmap (editor)
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/v1/roadmaps/{{roadmapSlug}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "titulo": "Go do zero ao deploy",
+    "descricao": "Mapa gamificado de Go",
+    "icone": "map",
+    "nos": [
+      { "id": "11111111-1111-4111-8111-111111111111", "tipo": "topico", "titulo": "Variáveis", "pos_x": 0, "pos_y": 0, "xp": 10, "conclusao": "manual" },
+      { "id": "22222222-2222-4222-8222-222222222222", "tipo": "topico", "titulo": "Funções", "pos_x": 0, "pos_y": 160, "xp": 10, "conclusao": "manual" },
+      {
+        "id": "33333333-3333-4333-8333-333333333333", "tipo": "chefe", "titulo": "Chefe: Fundamentos", "pos_x": 0, "pos_y": 320, "xp": 100, "conclusao": "quiz",
+        "quiz": { "questoes": [
+          { "id": "q1", "enunciado": "Qual palavra declara uma variável?", "correta": "b", "explicacao": "`var` ou `:=`.",
+            "opcoes": [ { "id": "a", "texto": "let" }, { "id": "b", "texto": "var" } ] }
+        ] }
+      }
+    ],
+    "arestas": [
+      { "origem": "11111111-1111-4111-8111-111111111111", "destino": "22222222-2222-4222-8222-222222222222", "tipo": "requer" },
+      { "origem": "22222222-2222-4222-8222-222222222222", "destino": "33333333-3333-4333-8333-333333333333", "tipo": "requer" }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Substitui metadados e grafo (ciclos, ids duplicados e chefe sem quiz em roadmap publicado => 400).
+}

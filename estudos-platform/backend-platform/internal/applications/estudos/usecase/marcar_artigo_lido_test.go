@@ -2,9 +2,11 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/thiago-tertuliano/estudos-platform/internal/applications/estudos/dto"
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/estudos/entity"
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/estudos/repository"
 	domainErros "github.com/thiago-tertuliano/estudos-platform/internal/domain/shared/errors"
@@ -78,6 +80,48 @@ func TestMarcarArtigoLido_ArtigoInexistente(t *testing.T) {
 	_, err := uc.Execute(context.Background(), uuid.New().String(), uuid.New().String(), true)
 	if de, ok := err.(*domainErros.DomainError); !ok || de.Kind != domainErros.NotFound {
 		t.Errorf("esperava NotFound, got %#v", err)
+	}
+}
+
+type fakeHook struct {
+	chamadas int
+	res      *dto.ResultadoGamificacao
+	err      error
+}
+
+func (f *fakeHook) AoConcluirArtigo(context.Context, string, string) (*dto.ResultadoGamificacao, error) {
+	f.chamadas++
+	return f.res, f.err
+}
+
+func ucComHook(h ArtigoConcluidoHook) *MarcarArtigoLido {
+	return NewMarcarArtigoLido(
+		&MockArtigoRepository{FindByIDFn: func(context.Context, string) (*entity.Artigo, error) { return &entity.Artigo{}, nil }},
+		&mockProgressoRepo{UpsertFn: func(context.Context, repository.ProgressoArtigo) error { return nil }},
+	).ComGamificacao(h)
+}
+
+func TestMarcarArtigoLido_DisparaGamificacaoAoConcluir(t *testing.T) {
+	h := &fakeHook{res: &dto.ResultadoGamificacao{XPGanho: 20}}
+	resp, err := ucComHook(h).Execute(context.Background(), uuid.NewString(), uuid.NewString(), true)
+	if err != nil || h.chamadas != 1 || resp.Gamificacao == nil || resp.Gamificacao.XPGanho != 20 {
+		t.Fatalf("err=%v chamadas=%d resp=%+v", err, h.chamadas, resp)
+	}
+}
+
+func TestMarcarArtigoLido_DesmarcarNaoDisparaGamificacao(t *testing.T) {
+	h := &fakeHook{}
+	resp, err := ucComHook(h).Execute(context.Background(), uuid.NewString(), uuid.NewString(), false)
+	if err != nil || h.chamadas != 0 || resp.Gamificacao != nil {
+		t.Fatalf("err=%v chamadas=%d resp=%+v", err, h.chamadas, resp)
+	}
+}
+
+func TestMarcarArtigoLido_FalhaDaGamificacaoNaoQuebraALeitura(t *testing.T) {
+	h := &fakeHook{err: errors.New("boom")}
+	resp, err := ucComHook(h).Execute(context.Background(), uuid.NewString(), uuid.NewString(), true)
+	if err != nil || !resp.Concluido || resp.Gamificacao != nil {
+		t.Fatalf("err=%v resp=%+v", err, resp)
 	}
 }
 

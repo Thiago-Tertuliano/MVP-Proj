@@ -26,6 +26,9 @@ type Config struct {
 	JWTRefreshTTLHours int
 
 	CORSAllowedOrigins []string
+
+	// EditorEmails lista (em minúsculas) quem pode criar/editar roadmaps. Promove no primeiro acesso.
+	EditorEmails []string
 }
 
 func Load() *Config {
@@ -39,6 +42,9 @@ func Load() *Config {
 	cfg.JWTAccessTTLMin = getEnvInt("JWT_ACCESS_TTL_MIN", 15)
 	cfg.JWTRefreshTTLHours = getEnvInt("JWT_REFRESH_TTL_HOURS", 168)
 	cfg.CORSAllowedOrigins = splitCSV(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"))
+	for _, e := range splitCSV(getEnv("EDITOR_EMAILS", "")) {
+		cfg.EditorEmails = append(cfg.EditorEmails, strings.ToLower(e))
+	}
 
 	if cfg.JWTSecret == "" {
 		log.Fatal("JWT_SECRET é obrigatório")

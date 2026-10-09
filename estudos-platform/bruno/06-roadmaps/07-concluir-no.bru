@@ -1,0 +1,24 @@
+meta {
+  name: Concluir no manual (dominei)
+  type: http
+  seq: 7
+}
+
+post {
+  url: {{baseUrl}}/api/v1/roadmaps/{{roadmapSlug}}/nos/11111111-1111-4111-8111-111111111111/concluir
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Idempotente: repetir devolve `ja_concluido: true` e `xp_ganho: 0`.
+  No bloqueado => 409; no de artigo/quiz => 400.
+}

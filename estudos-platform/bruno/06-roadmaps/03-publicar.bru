@@ -1,0 +1,23 @@
+meta {
+  name: Publicar Roadmap (editor)
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/roadmaps/{{roadmapSlug}}/publicar
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Valida o grafo completo (chefe precisa de quiz, nó por artigo precisa de artigo, sem ciclos).
+}

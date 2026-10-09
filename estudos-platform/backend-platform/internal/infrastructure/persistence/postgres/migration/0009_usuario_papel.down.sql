@@ -1,0 +1,2 @@
+ALTER TABLE usuarios DROP CONSTRAINT IF EXISTS usuarios_papel_check;
+ALTER TABLE usuarios DROP COLUMN IF EXISTS papel;
