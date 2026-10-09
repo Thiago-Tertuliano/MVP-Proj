@@ -9,13 +9,25 @@ import (
 	"github.com/thiago-tertuliano/estudos-platform/internal/domain/shared/errors"
 )
 
+// PapelResolver informa o papel efetivo do usuário (aluno/editor).
+type PapelResolver interface {
+	Papel(ctx context.Context, usuarioID string) (string, error)
+}
+
 // ObterPerfil busca o usuário completo pelo ID extraído do token autenticado.
 type ObterPerfil struct {
-	repo repository.UsuarioRepository
+	repo   repository.UsuarioRepository
+	papeis PapelResolver
 }
 
 func NewObterPerfil(repo repository.UsuarioRepository) *ObterPerfil {
 	return &ObterPerfil{repo: repo}
+}
+
+// ComPapel habilita o campo "papel" na resposta.
+func (uc *ObterPerfil) ComPapel(p PapelResolver) *ObterPerfil {
+	uc.papeis = p
+	return uc
 }
 
 func (uc *ObterPerfil) Execute(ctx context.Context, usuarioID string) (*dto.UsuarioResponse, error) {
@@ -28,9 +40,17 @@ func (uc *ObterPerfil) Execute(ctx context.Context, usuarioID string) (*dto.Usua
 		return nil, errors.ErrInternal("falha ao buscar usuário", "ObterPerfil.Execute", err)
 	}
 
-	return &dto.UsuarioResponse{
+	resp := &dto.UsuarioResponse{
 		ID:    usuario.ID().String(),
 		Nome:  usuario.Nome(),
 		Email: usuario.Email().Value(),
-	}, nil
+	}
+	if uc.papeis != nil {
+		papel, err := uc.papeis.Papel(ctx, usuarioID)
+		if err != nil {
+			return nil, errors.ErrInternal("falha ao obter papel", "ObterPerfil.Execute", err)
+		}
+		resp.Papel = papel
+	}
+	return resp, nil
 }

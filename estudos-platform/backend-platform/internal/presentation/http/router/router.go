@@ -32,6 +32,10 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	trilhaRepo := pgrepo.NewTrilhaRepoPG(pool)
 	progressoRepo := pgrepo.NewProgressoRepoPG(pool)
 	anotacaoRepo := pgrepo.NewAnotacaoRepoPG(pool)
+	papelRepo := pgrepo.NewPapelRepoPG(pool)
+	roadmapRepo := pgrepo.NewRoadmapRepoPG(pool)
+	roadmapProgRepo := pgrepo.NewRoadmapProgressoRepoPG(pool)
+	gamificacaoRepo := pgrepo.NewGamificacaoRepoPG(pool)
 
 	hasher := external.NewBcryptHasher(10)
 	tokens := external.NewJWTService(cfg.JWTSecret)
@@ -46,7 +50,8 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	})
 	loginUC := usecase.NewLoginUsuario(usuarioRepo, refreshRepo, hasher, tokens, tokenCfg)
 	refreshUC := usecase.NewRefreshTokenUC(refreshRepo, usuarioRepo, tokens, tokenCfg)
-	perfilUC := usecase.NewObterPerfil(usuarioRepo)
+	papelUC := usecase.NewPapelEditor(papelRepo, cfg.EditorEmails)
+	perfilUC := usecase.NewObterPerfil(usuarioRepo).ComPapel(papelUC)
 	logoutUC := usecase.NewLogoutUsuario(refreshRepo)
 
 	criarArtigoUC := usecase.NewCriarArtigo(artigoRepo, trilhaRepo)
@@ -61,7 +66,12 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	listarTrilhasUC := usecase.NewListarTrilhas(trilhaRepo)
 	adicionarModuloUC := usecase.NewAdicionarModulo(trilhaRepo)
 	publicarTrilhaUC := usecase.NewPublicarTrilha(trilhaRepo)
-	marcarLidoUC := usecase.NewMarcarArtigoLido(artigoRepo, progressoRepo)
+	gamificacaoUC := usecase.NewGamificacaoRoadmap(roadmapRepo, roadmapProgRepo, gamificacaoRepo)
+	marcarLidoUC := usecase.NewMarcarArtigoLido(artigoRepo, progressoRepo).ComGamificacao(gamificacaoUC)
+	listarRoadmapsUC := usecase.NewListarRoadmaps(roadmapRepo)
+	obterRoadmapUC := usecase.NewObterRoadmap(roadmapRepo)
+	roadmapAlunoUC := usecase.NewRoadmapAluno(roadmapRepo, roadmapProgRepo, gamificacaoUC)
+	roadmapEditorUC := usecase.NewRoadmapEditor(roadmapRepo)
 	progressoTrilhaUC := usecase.NewObterProgressoTrilha(progressoRepo)
 	continuarUC := usecase.NewObterContinuar(progressoRepo)
 	buscarUC := usecase.NewBuscarArtigos(artigoRepo)
@@ -73,11 +83,12 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 		RefreshMaxAge: cfg.JWTRefreshTTLHours * 3600,
 		Secure:        cfg.AppEnv == "production",
 	})
-	artigos := handler.NewArtigoHandler(criarArtigoUC, obterArtigoUC, listarArtigosUC, listarPorTrilhaUC,  atualizarArtigoUC, publicarArtigoUC)
-	trilhas := handler.NewTrilhaHandler(criarTrilhaUC, obterTrilhaUC, listarTrilhasUC, adicionarModuloUC, publicarTrilhaUC, )
+	artigos := handler.NewArtigoHandler(criarArtigoUC, obterArtigoUC, listarArtigosUC, listarPorTrilhaUC, atualizarArtigoUC, publicarArtigoUC)
+	trilhas := handler.NewTrilhaHandler(criarTrilhaUC, obterTrilhaUC, listarTrilhasUC, adicionarModuloUC, publicarTrilhaUC)
 	progresso := handler.NewProgressoHandler(marcarLidoUC, progressoTrilhaUC, continuarUC)
 	busca := handler.NewBuscaHandler(buscarUC)
 	anotacoes := handler.NewAnotacaoHandler(salvarAnotacaoUC, obterAnotacaoUC)
+	roadmaps := handler.NewRoadmapHandler(listarRoadmapsUC, obterRoadmapUC, roadmapAlunoUC, roadmapEditorUC)
 	r.Route("/api/v1", func(api chi.Router) {
 		limiteAuth := middleware.NewRateLimit(10, time.Minute)
 		api.Group(func(pub chi.Router) {
@@ -93,6 +104,8 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 		api.Get("/trilhas/{slug}", trilhas.Obter)
 		api.Get("/trilhas/{slug}/artigos", artigos.ListarPorTrilha)
 		api.Get("/busca", busca.Buscar)
+		api.Get("/roadmaps", roadmaps.Listar)
+		api.Get("/roadmaps/{slug}", roadmaps.Obter)
 
 		api.Group(func(pr chi.Router) {
 			pr.Use(middleware.NewAutenticador(tokens).Proteger)
@@ -109,6 +122,24 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 			pr.Get("/progresso/continuar", progresso.Continuar)
 			pr.Put("/artigos/{id}/anotacoes", anotacoes.Salvar)
 			pr.Get("/artigos/{id}/anotacoes", anotacoes.Obter)
+
+			// Aluno: progresso e gamificação dos roadmaps.
+			pr.Get("/gamificacao/me", roadmaps.Gamificacao)
+			pr.Get("/gamificacao/roadmaps", roadmaps.ProgressoCatalogo)
+			pr.Get("/roadmaps/{slug}/progresso", roadmaps.Progresso)
+			pr.Post("/roadmaps/{slug}/nos/{noId}/concluir", roadmaps.ConcluirNo)
+			pr.Post("/roadmaps/{slug}/nos/{noId}/quiz", roadmaps.ResponderQuiz)
+
+			// Editor: autoria de roadmaps (papel verificado no banco a cada requisição).
+			pr.Group(func(ed chi.Router) {
+				ed.Use(middleware.RequerEditor(papelUC))
+				ed.Get("/roadmaps/meus", roadmaps.Meus)
+				ed.Post("/roadmaps", roadmaps.Criar)
+				ed.Get("/roadmaps/{slug}/editar", roadmaps.ObterParaEdicao)
+				ed.Put("/roadmaps/{slug}", roadmaps.Salvar)
+				ed.Post("/roadmaps/{slug}/publicar", roadmaps.Publicar)
+				ed.Post("/roadmaps/{slug}/despublicar", roadmaps.Despublicar)
+			})
 		})
 	})
 

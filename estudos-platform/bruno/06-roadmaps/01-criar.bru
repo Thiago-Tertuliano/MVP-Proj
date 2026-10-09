@@ -1,0 +1,43 @@
+meta {
+  name: Criar Roadmap (editor)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/roadmaps
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "titulo": "Go do zero ao deploy",
+    "descricao": "Mapa gamificado de Go",
+    "icone": "map"
+  }
+}
+
+script:post-response {
+  const body = res.getBody();
+  if (body && body.slug) {
+    bru.setEnvVar("roadmapSlug", body.slug);
+  }
+}
+
+assert {
+  res.status: eq 201
+}
+
+docs {
+  Requer papel `editor` (e-mail em EDITOR_EMAILS). Aluno recebe 403.
+  Cria um rascunho vazio e salva `roadmapSlug` no env.
+}

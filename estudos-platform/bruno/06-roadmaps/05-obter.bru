@@ -1,0 +1,19 @@
+meta {
+  name: Obter Roadmap (publico, sem gabarito)
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/roadmaps/{{roadmapSlug}}
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  O quiz do chefe vem sem `correta`/`explicacao`. Rascunho responde 404.
+}

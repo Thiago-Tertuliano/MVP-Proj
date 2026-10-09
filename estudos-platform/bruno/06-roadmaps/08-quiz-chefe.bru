@@ -1,0 +1,34 @@
+meta {
+  name: Responder quiz do chefe
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/roadmaps/{{roadmapSlug}}/nos/33333333-3333-4333-8333-333333333333/quiz
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "respostas": { "q1": "b" }
+  }
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Aprovacao: >= 70% de acertos. So aprovado recebe `correcao` e conclui o no (XP do chefe).
+  Exige os nos anteriores dominados (senao 409).
+}

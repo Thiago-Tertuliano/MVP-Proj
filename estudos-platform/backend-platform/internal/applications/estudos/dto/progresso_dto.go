@@ -7,6 +7,8 @@ type MarcarArtigoLidoRequest struct {
 type ProgressoArtigoResponse struct {
 	ArtigoID  string `json:"artigo_id"`
 	Concluido bool   `json:"concluido"`
+	// Gamificacao traz XP/conquistas gerados por esta leitura (nós de roadmap concluídos).
+	Gamificacao *ResultadoGamificacao `json:"gamificacao,omitempty"`
 }
 
 type ProgressoTrilhaResponse struct {

@@ -1,0 +1,15 @@
+meta {
+  name: Listar Roadmaps (publico)
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/roadmaps
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+}

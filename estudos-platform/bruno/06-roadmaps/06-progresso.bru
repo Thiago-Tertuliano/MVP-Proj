@@ -1,0 +1,23 @@
+meta {
+  name: Progresso do aluno no Roadmap
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/roadmaps/{{roadmapSlug}}/progresso
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  `estados`: mapa noId -> bloqueado | disponivel | em_curso | dominado (calculado no servidor).
+}
