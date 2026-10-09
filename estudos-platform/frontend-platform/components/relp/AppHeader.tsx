@@ -16,11 +16,18 @@ export type AppHeaderProps = {
   onSearch?: (termo: string) => void;
   onLogout?: () => void;
   loggingOut?: boolean;
+  /** Indicador de nível/XP/sequência (só renderizado para logado). */
+  hud?: React.ReactNode;
   className?: string;
 };
 
+const NAV = [
+  { href: "/", rotulo: "Trilhas" },
+  { href: "/roadmaps", rotulo: "Roadmaps" },
+];
+
 /** Cabeçalho único do app: logo, navegação, busca e área de sessão. Puro (sem rede): estados via props. */
-export function AppHeader({ state, user, onSearch, onLogout, loggingOut, className }: AppHeaderProps) {
+export function AppHeader({ state, user, onSearch, onLogout, loggingOut, hud, className }: AppHeaderProps) {
   return (
     <header className={cn("sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur", className)}>
       <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
@@ -32,13 +39,16 @@ export function AppHeader({ state, user, onSearch, onLogout, loggingOut, classNa
           <RelpLogo />
         </Link>
 
-        <nav aria-label="Principal" className="hidden sm:block">
-          <Link
-            href="/"
-            className="rounded-md px-2 py-1 text-sm font-medium text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            Trilhas
-          </Link>
+        <nav aria-label="Principal" className="flex items-center gap-1">
+          {NAV.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="rounded-md px-2 py-1 text-sm font-medium text-muted-foreground transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {item.rotulo}
+            </Link>
+          ))}
         </nav>
 
         {/* Busca: linha própria no mobile, centralizada a partir de md. */}
@@ -67,6 +77,7 @@ export function AppHeader({ state, user, onSearch, onLogout, loggingOut, classNa
 
           {state === "user" && user && (
             <>
+              {hud}
               <div className="flex items-center gap-2">
                 <Avatar>
                   <AvatarFallback aria-hidden="true">{iniciais(user.nome, user.email)}</AvatarFallback>
