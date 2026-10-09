@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 
 import { SessionHeader } from "@/components/relp/SessionHeader";
+import { RewardHost } from "@/components/roadmap/RewardHost";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SessionProvider } from "@/lib/session";
@@ -46,6 +47,7 @@ export default function RootLayout({
             <main id="conteudo" tabIndex={-1} className="mx-auto max-w-5xl px-4 py-8 focus:outline-none">
               {children}
             </main>
+            <RewardHost />
             <Toaster />
           </TooltipProvider>
         </SessionProvider>

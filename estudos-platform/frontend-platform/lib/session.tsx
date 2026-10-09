@@ -4,6 +4,8 @@ import * as React from "react";
 
 import { api, ApiError, onSessionExpired } from "@/lib/api";
 import { limparProgresso } from "@/lib/progress-store";
+import { limparGamificacao } from "@/lib/roadmaps/gamificacao-store";
+import { limparProgressoRoadmaps } from "@/lib/roadmaps/progresso-store";
 import type { AuthResposta, Usuario } from "@/lib/types";
 import { toast } from "@/components/ui/sonner";
 
@@ -42,6 +44,16 @@ function gravarHint(ativo: boolean) {
   }
 }
 
+/** Login/registro não devolvem o papel; /auth/me sim. Falha aqui nunca derruba o login (cai em "aluno"). */
+async function comPapel(usuario: Usuario): Promise<Usuario> {
+  if (usuario.papel) return usuario;
+  try {
+    return await api<Usuario>("/auth/me");
+  } catch {
+    return usuario;
+  }
+}
+
 export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = React.useState<{ status: SessionStatus; user: Usuario | null }>({
     status: "loading",
@@ -75,6 +87,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       if (statusRef.current !== "user") return;
       gravarHint(false);
       limparProgresso();
+      limparGamificacao();
+      limparProgressoRoadmaps();
       setState({ status: "guest", user: null });
       toast.warning("Sua sessão expirou.", { description: "Entre novamente para continuar de onde parou." });
     });
@@ -86,14 +100,16 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       async login(email, senha) {
         const resp = await api<AuthResposta>("/auth/login", { method: "POST", body: { email, senha } });
         gravarHint(true);
-        setState({ status: "user", user: resp.usuario });
-        return resp.usuario;
+        const user = await comPapel(resp.usuario);
+        setState({ status: "user", user });
+        return user;
       },
       async registrar(nome, email, senha) {
         const resp = await api<AuthResposta>("/auth/registrar", { method: "POST", body: { nome, email, senha } });
         gravarHint(true);
-        setState({ status: "user", user: resp.usuario });
-        return resp.usuario;
+        const user = await comPapel(resp.usuario);
+        setState({ status: "user", user });
+        return user;
       },
       async logout() {
         try {
@@ -108,6 +124,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         } finally {
           gravarHint(false);
           limparProgresso();
+          limparGamificacao();
+          limparProgressoRoadmaps();
           setState({ status: "guest", user: null });
         }
       },

@@ -1,5 +1,13 @@
 import { api } from "@/lib/api";
+import { aplicarResultado } from "@/lib/roadmaps/gamificacao-store";
+import type { ResultadoGamificacao } from "@/lib/roadmaps/types";
 import type { ProgressoTrilha } from "@/lib/types";
+
+type ProgressoArtigoResposta = {
+  artigo_id: string;
+  concluido: boolean;
+  gamificacao?: ResultadoGamificacao | null;
+};
 
 /**
  * Cache em memória do progresso por trilha, compartilhado entre card, mapa e artigo.
@@ -80,7 +88,12 @@ export async function marcarArtigo(params: {
   }
 
   try {
-    await api(`/progresso/artigos/${artigoId}`, { method: "PUT", body: { concluido } });
+    const resp = await api<ProgressoArtigoResposta | undefined>(`/progresso/artigos/${artigoId}`, {
+      method: "PUT",
+      body: { concluido },
+    });
+    // Ler um artigo ligado a um nó de roadmap pode render XP/conquistas: o HUD e os toasts reagem.
+    aplicarResultado(resp?.gamificacao);
   } catch (err) {
     if (trilhaId && antes) set(trilhaId, antes);
     throw err;

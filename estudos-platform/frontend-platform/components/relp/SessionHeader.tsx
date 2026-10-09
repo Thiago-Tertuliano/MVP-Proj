@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import { toast } from "@/components/ui/sonner";
+import { GamificacaoHudConnected } from "@/components/roadmap/GamificacaoHudConnected";
 import { AppHeader } from "@/components/relp/AppHeader";
 import { useSession } from "@/lib/session";
 
@@ -32,6 +33,7 @@ export function SessionHeader() {
       onSearch={(termo) => router.push(`/busca?q=${encodeURIComponent(termo)}`)}
       onLogout={sair}
       loggingOut={saindo}
+      hud={<GamificacaoHudConnected />}
     />
   );
 }
