@@ -1,34 +1,29 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
-	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
-	"github.com/joho/godotenv"
+	"github.com/jackc/pgx/v5"
+	"github.com/thiago-tertuliano/estudos-platform/internal/infrastructure/config"
 	"github.com/thiago-tertuliano/estudos-platform/internal/infrastructure/persistence/postgres/migration"
 )
+
+// Hash bcrypt de "senha1234" gravado pela migration 0004 (autor de demo).
+const hashSenhaSeed = "$2a$10$GnWGzZlXrOg9M.dqhPxVR.qVwdW1.MKsO7lVtsv.iupzECQ089Em2"
 
 func main() {
 	down := flag.Bool("down", false, "reverte a última migration")
 	flag.Parse()
 
-	_ = godotenv.Load()
-
-	dsn := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		env("DB_USER", "estudos"),
-		env("DB_PASSWORD", "estudos_dev"),
-		env("DB_HOST", "localhost"),
-		env("DB_PORT", "5433"),
-		env("DB_NAME", "estudos_platform"),
-		env("DB_SSL_MODE", "disable"),
-	)
+	dsn := config.LoadDB().PostgresURL()
 
 	src, err := iofs.New(migration.FS, ".")
 	if err != nil {
@@ -53,11 +48,29 @@ func main() {
 		log.Fatalf("migrate up: %v", err)
 	}
 	log.Println("migrations aplicadas")
+
+	if os.Getenv("APP_ENV") == "production" {
+		bloquearSenhaDoSeed(dsn)
+	}
 }
 
-func env(key, fallback string) string {
-	if v, ok := os.LookupEnv(key); ok && v != "" {
-		return v
+// bloquearSenhaDoSeed impede login com a senha pública do autor de demo em produção.
+// Só troca o hash se ainda for o do seed: uma senha definida depois pelo time é preservada.
+func bloquearSenhaDoSeed(dsn string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	conn, err := pgx.Connect(ctx, dsn)
+	if err != nil {
+		log.Fatalf("conexão para bloquear o seed: %v", err)
 	}
-	return fallback
+	defer func() { _ = conn.Close(ctx) }()
+
+	tag, err := conn.Exec(ctx, `UPDATE usuarios SET senha_hash = '!' WHERE email = 'autor.seed@estudos.local' AND senha_hash = $1`, hashSenhaSeed)
+	if err != nil {
+		log.Fatalf("bloquear senha do seed: %v", err)
+	}
+	if tag.RowsAffected() > 0 {
+		log.Println("senha pública do autor de demo bloqueada (produção)")
+	}
 }

@@ -101,7 +101,9 @@ export type ApiOptions = {
 };
 
 function buildUrl(path: string, query?: ApiOptions["query"]): string {
-  const url = new URL(`${apiBaseUrl()}${path}`);
+  // Em produção sem domínio próprio a base é relativa ("/") e o Next faz proxy para a API.
+  const origem = typeof window === "undefined" ? undefined : window.location.origin;
+  const url = new URL(`${apiBaseUrl()}${path}`, origem);
   if (query) {
     for (const [k, v] of Object.entries(query)) {
       if (v !== undefined && v !== "") url.searchParams.set(k, String(v));

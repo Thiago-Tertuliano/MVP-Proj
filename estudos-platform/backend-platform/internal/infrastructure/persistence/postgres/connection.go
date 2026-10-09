@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"time"
 
@@ -11,12 +10,10 @@ import (
 )
 
 func NewConnection(cfg *config.Config) *pgxpool.Pool {
-	dsn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.DBSSLMode,
-	)
+	dsn := cfg.PostgresURL()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// Postgres gerenciado gratuito pode estar "dormindo": o 1º acesso demora alguns segundos.
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 
 	poolCfg, err := pgxpool.ParseConfig(dsn)
