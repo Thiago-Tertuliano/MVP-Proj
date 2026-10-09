@@ -1,0 +1,5 @@
+.env
+*.out
+cover*
+scripts
+docker-compose.yml

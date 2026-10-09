@@ -1,0 +1,25 @@
+# Blueprint do Render (plano gratuito). Passo a passo em estudos-platform/documentacao/DEPLOY.md.
+services:
+  - type: web
+    name: relp-api
+    runtime: docker
+    plan: free
+    rootDir: estudos-platform/backend-platform
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    branch: dev
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: EDITOR_EMAILS
+        sync: false

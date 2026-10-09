@@ -90,7 +90,7 @@ func New(cfg *config.Config, pool *pgxpool.Pool) http.Handler {
 	anotacoes := handler.NewAnotacaoHandler(salvarAnotacaoUC, obterAnotacaoUC)
 	roadmaps := handler.NewRoadmapHandler(listarRoadmapsUC, obterRoadmapUC, roadmapAlunoUC, roadmapEditorUC)
 	r.Route("/api/v1", func(api chi.Router) {
-		limiteAuth := middleware.NewRateLimit(10, time.Minute)
+		limiteAuth := middleware.NewRateLimit(10, time.Minute).ConfiandoNoProxy(cfg.TrustProxy)
 		api.Group(func(pub chi.Router) {
 			pub.Use(limiteAuth.Handler)
 			pub.Post("/auth/registrar", auth.Registrar)

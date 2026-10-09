@@ -44,6 +44,17 @@ describe("api client", () => {
     expect(apiBaseUrl()).toBe("https://api.relp.test/api/v1");
   });
 
+  it("aceita base relativa no browser (proxy do Next em produção)", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "/");
+    vi.stubGlobal("window", { location: { origin: "https://relp.vercel.app" } });
+    fetchMock.mockResolvedValue(json(200, { ok: true }));
+
+    await api("/trilhas", { query: { limit: 10 } });
+
+    expect(String(fetchMock.mock.calls[0][0])).toBe("https://relp.vercel.app/api/v1/trilhas?limit=10");
+    expect(apiBaseUrl()).toBe("/api/v1");
+  });
+
   it("serializa body em JSON e define Content-Type só quando há body", async () => {
     fetchMock.mockResolvedValue(json(200, {}));
     await api("/auth/login", { method: "POST", body: { email: "a@b.co", senha: "x" } });
